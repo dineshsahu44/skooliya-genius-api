@@ -26,7 +26,7 @@ use App\Http\Controllers\CommentController;
 */
 Route::get('/', [StaticController::class,'show']);
 Route::middleware('checkurl')->group(function(){
-    Route::post('/loginapi.php', [AuthController::class,'login']);
+    Route::any('/loginapi.php', [AuthController::class,'login']);
     Route::group(['middleware' => 'auth.verify'], function(){
         Route::post('/checkuspassapi.php', [AuthController::class,'checkUsPass']);
         Route::post('/changepasswordapi.php', [AuthController::class,'changePassword']);
