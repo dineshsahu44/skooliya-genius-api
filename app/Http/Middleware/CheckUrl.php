@@ -54,7 +54,7 @@ class CheckUrl
                 return response()->json(['success'=>0,'msg'=>'school name is not found!']);
             }
         }catch(\Exception $e){
-            dd($e);
+            // dd($e);
             return response()->json(['success'=>0,'msg'=>'error on server config!']);
         }
     }

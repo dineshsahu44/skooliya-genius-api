@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Laravel\Passport\Token;
 use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Log;
 use App\Models\Admission;
 use App\Models\Server;
 use App\Models\User;
@@ -15,11 +16,13 @@ use App\Models\HwMessageFor;
 use App\Models\BirthdayCard;
 use App\Models\LiveClass;
 use App\Models\LiveClassFor;
+
 use DB;
 
 class AuthController extends Controller
 {
     public static function login(Request $request){
+        Log::info('Auth Controller', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url(),"param"=>$_POST]);
         $msgUnauth = ["msg"=>"unauthorized access!"];
         $msgTable = ["msg"=>"record not found in table!"];
         try{
@@ -111,12 +114,15 @@ class AuthController extends Controller
                 }
 
                 $success['token'] =  'Bearer '.$user->createToken('AuthToken')->accessToken;
+                Log::info('Auth Controller  Response', ['Response' => $success]);
                 return customResponse(1,$success);
             }
             else{
+                Log::info('Auth Controller  Unauth', ['Response' => $msgUnauth]);
                 return customResponse(0,$msgUnauth);
             }
         }catch(\Exception $e){
+            Log::Error('Auth Controller Exception ', ['Exception' => $e]);
             return exceptionResponse($e);
         }
     }
