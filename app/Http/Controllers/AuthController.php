@@ -27,6 +27,7 @@ class AuthController extends Controller
         $msgTable = ["msg"=>"record not found in table!"];
         try{
             $user = User::where([['username',$request->username],['password',$request->password]])->first();
+            // dd($user);
             if($user){
                 Token::where('user_id', $user->id)->update(['revoked' => true]);
             }
@@ -52,7 +53,7 @@ class AuthController extends Controller
                             "studentinfo"=>[
                                 "success"=> 1,
                                 "studentid"=> $student->registration_id,
-                                "name"=> $student->name,
+                                "name"=> ucwords(trim(strtolower($student->name))),
                                 "class"=> $student->class,
                                 "section"=> $student->section,
                                 "admissionno"=> $student->registration_id,
@@ -68,7 +69,8 @@ class AuthController extends Controller
                                 "fathername"=> $student->f_name,
                                 "mothername"=> $student->m_name,
                                 "photo"=> $student->photo,
-                                "password"=> $user->password
+                                "password"=> $user->password,
+                                'authToken'=>  'Bearer '.$user->createToken('AuthToken')->accessToken,
                             ],
                             "sessionlist"=> $studentSessionList,
                         ];
@@ -78,6 +80,7 @@ class AuthController extends Controller
                 }elseif($request->apptype=="teacher"){
                     $faculty = Faculty::where([['faculties.faculty_id',$user->username],['faculties.status','Active'],['faculties.school_id',$user->school_id]])
                         ->orderBy('faculties.id','DESC')->take(1)->first();
+                    // dd($faculty);
                     if($faculty){
                         $facultySessionList = Faculty::select('school_sessions.id as companyid','school_sessions.name as session','school_sessions.start_date',
                             'school_sessions.end_date')
@@ -105,6 +108,7 @@ class AuthController extends Controller
                                 "onlineclasspermission"=> $faculty->onlineclasspermission,
                                 "contactnopermission"=> $faculty->contactnopermission,
                                 "teacherstatus"=> $faculty->status=='Active'?'Y':'N',
+                                'authToken'=>  'Bearer '.$user->createToken('AuthToken')->accessToken,
                             ],
                             "sessionlist"=> $facultySessionList,
                         ];
@@ -113,7 +117,7 @@ class AuthController extends Controller
                     }
                 }
 
-                $success['token'] =  'Bearer '.$user->createToken('AuthToken')->accessToken;
+                
                 Log::info('Auth Controller  Response', ['Response' => $success]);
                 return customResponse(1,$success);
             }
@@ -184,11 +188,11 @@ class AuthController extends Controller
                             "name"=> $student->name,
                             "birthdaycard"=>[
                                 "success"=> 1,
-                                "cardimageurl"=> $birthdayCard->cardimageurl,
-                                "status"=> $birthdayCard->status,
-                                "btntext"=>  $birthdayCard->btntext,
-                                "type"=> !empty($student->dob)||$student->dob!=null?date('m-d',strtotime($student->dob))==date('m-d')?1:0:0,//$type 0-nothing, 1-birthdaycard can skip, 2-never skip the warning;
-                                "url"=> $birthdayCard->url,
+                                "cardimageurl"=> @$birthdayCard->cardimageurl,
+                                "status"=> @$birthdayCard->status,
+                                "btntext"=>  @$birthdayCard->btntext,
+                                "type"=> !empty(@$student->dob)||@$student->dob!=null?date('m-d',strtotime($student->dob))==date('m-d')?1:0:0,//$type 0-nothing, 1-birthdaycard can skip, 2-never skip the warning;
+                                "url"=> @$birthdayCard->url,
                             ],
                             "total"=>[
                                 "quiz"=> 10,
@@ -267,8 +271,8 @@ class AuthController extends Controller
                             ],
                             "birthdaycard"=>[
                                 "success"=>1,
-                                "cardimageurl"=>$birthdayCard->cardimageurl,
-                                "status"=>$birthdayCard->status,
+                                "cardimageurl"=>@$birthdayCard->cardimageurl,
+                                "status"=>@$birthdayCard->status,
                             ],
                             "youtubelink"=>$youtubelink,
                             "sessionlist"=> $facultySessionList,
@@ -283,6 +287,39 @@ class AuthController extends Controller
             else{
                 return customResponse(0,$msgUnauth);
             }
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+        }
+    }
+
+    public static function tokenHandleApi(Request $request){
+        $msgUnauth = ["msg"=>"unauthorized access!"]; 
+        // return customResponse(1);       
+        try{
+            // if($user = getAuth()){
+            //     Log::info('token', ["response"=>$request->token]);
+                if($request->apptype=="student"){
+                    // // device_token
+                    // $currentSession = currentSession();
+                    // $companyid= $currentSession->id;
+                    // $studentid = $request->accountid/;
+                    // DB::enableQueryLog();
+                    $value = $request->action=='update'?$request->token:'';
+                    // User::where([['role','student'],['school_id',$user->school_id],['username',$request->accountid]])->update(['device_token'=>$value]);
+                    User::where([['role','student'],['username',$request->accountid]])->update(['device_token'=>$value]);
+                    
+                }elseif($request->apptype=="teacher"){
+                    $value = $request->action=='update'?$request->token:'';
+                    // $o = User::where([['role','!=','student'],['school_id',$user->school_id],['username',$request->accountid]])->update(['device_token'=>$value]);
+                    $o = User::where([['role','!=','student'],['username',$request->accountid]])->update(['device_token'=>$value]);
+                    // Log::info('token1', ["response"=>$o]);
+                }
+                return customResponse(1);
+            // }
+            // else{
+            //     return customResponse(1);
+            //     // return customResponse(0,$msgUnauth);
+            // }
         }catch(\Exception $e){
             return exceptionResponse($e);
         }

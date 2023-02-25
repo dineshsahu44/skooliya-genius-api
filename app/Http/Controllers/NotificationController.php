@@ -188,17 +188,107 @@ class NotificationController extends Controller
             $pageLimit = pageLimit(@$request->page);
             $hwmessage = [];
             if($request->flag=='showbyme'){
-                $hwmessage = HwMessage::select(DB::Raw("0 as countcomment"),'hwmessage.*')
+                $hwmessage = HwMessage::select(DB::Raw("0 as countcomment"),'hwmessage.msgid','hwmessage.msgheading','hwmessage.msgbody'
+                ,'hwmessage.entrydate','hwmessage.postedbyid','hwmessage.postedby',DB::Raw("if(hwmessage.attachment IS NULL ,'',hwmessage.attachment ) as attachment"),
+                'hwmessage.msgtype','hwmessage.commentstatus',DB::Raw("1 as smsflag"))
                 ->where([['companyid',$request->companyid],['postedbyid',$request->accountid]])
                 ->orderByDesc('entrydate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
             }elseif($request->flag=='showforme'){
-                $hwmessage = HwMessage::select(DB::Raw("0 as countcomment"),'hwmessage.*')
+                $hwmessage = HwMessage::select(DB::Raw("0 as countcomment"),'hwmessage.msgid','hwmessage.msgheading','hwmessage.msgbody'
+                ,'hwmessage.entrydate','hwmessage.postedbyid','hwmessage.postedby',DB::Raw("if(hwmessage.attachment IS NULL ,'',hwmessage.attachment ) as attachment"),
+                'hwmessage.msgtype','hwmessage.commentstatus',DB::Raw("1 as smsflag"))
                 ->join('hwmessagefor','hwmessagefor.msgid','hwmessage.msgid')
                 ->where([['companyid',$request->companyid],['studentid',$request->accountid]])
                 ->orderByDesc('entrydate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
             }
             
             return customResponse(1,['list'=>$hwmessage]);
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+        }
+    }
+
+    public function msgSendToRecord(Request $request){
+        try{
+            $msgid = $request->msgid;
+            $companyid = $request->companyid;
+            $msgtype = $request->msgtype;
+            if($msgtype=='noticeteacher'){
+                $hwmsgfor = HwMessageFor::select('faculties.name as accountname','faculties.faculty_id as accountid')
+                ->join('faculties','hwmessagefor.studentid','faculties.faculty_id')
+                ->where('hwmessagefor.msgid',$msgid)
+                ->orderBy('name')
+                ->get();
+                // return customResponse(1,['list'=>$hwmsgfor]);
+                // return $hwmsgfor;
+                // $sql = "SELECT accountname, accountid FROM hwmessagefor,`teachers` 
+                // WHERE msgid=$msgid AND teachers.accountid=hwmessagefor.studentid AND companyid=$companyid ORDER BY accountname ASC ";
+                // //$sql = "SELECT `teachers`.`accountname`, `teachers`.`accountid` FROM hwmessagefor 
+                // INNER JOIN `teachers` on teachers.accountid=hwmessagefor.studentid and teachers.companyid='$companyid' 
+                // WHERE hwmessagefor.msgid='$msgid' ORDER BY teachers.accountname ASC";
+                // ///echo $sql;
+                // $stmt = $conn->prepare($sql);
+                
+                // //executing the query 
+                // $stmt->execute();
+                
+                // //binding results to the query 
+                // $stmt->bind_result($accountname,$accountid);
+                
+                // $details = array(); 
+                
+                // //traversing through all the result 
+                // while($stmt->fetch()){
+                //     $temp = array();
+                //     $temp['accountid'] = $accountid; 
+                //     $temp['accountname']=$accountname;
+
+
+                //     array_push($details, $temp);
+                // }
+
+            }else{
+                $hwmsgfor = HwMessageFor::select('registrations.registration_id as studentid','registrations.name',
+                DB::Raw('concat(classes.class," ",sections.section) as class'))
+                ->join('registrations','hwmessagefor.studentid',DB::Raw("registrations.registration_id and registrations.session=$companyid"))
+                ->join('classes','classes.id','registrations.class')
+                ->join('sections','sections.id','registrations.section')
+                ->where('hwmessagefor.msgid',$msgid)
+                ->orderBy('classes.class')
+                ->orderBy('sections.section')
+                ->orderBy('registrations.name')
+                ->get();
+                // return $hwmsgfor;
+                // $stmt = $conn->prepare("SELECT admission.studentid,name,class,admission.section FROM hwmessagefor,admission  
+                // WHERE msgid=$msgid AND admission.studentid=hwmessagefor.studentid AND companyid=$companyid 
+                // ORDER BY class ASC,section ASC,name ASC ");
+                
+                // //executing the query 
+                // $stmt->execute();
+                
+                // //binding results to the query 
+                // $stmt->bind_result($studentid,$name,$class,$section);
+                
+                // $details = array(); 
+                
+                // //traversing through all the result 
+                // while($stmt->fetch()){
+                //     $temp = array();
+                //     $temp['studentid'] = $studentid; 
+                //     $temp['class'] = $class." ".$section; 
+                //     $temp['name']=$name;
+
+
+                //     array_push($details, $temp);
+                // }
+            } 
+            // $conn->close();
+            // $result['success']=1;
+            // $result['list']=$details;
+            
+            // //displaying the result in json format 
+            // echo json_encode($result);
+            return customResponse(1,['list'=>$hwmsgfor]);
         }catch(\Exception $e){
             return exceptionResponse($e);
         }

@@ -15,10 +15,10 @@ class QuizController extends Controller
         try{
             $validator = Validator::make($request->all(),[
                 'ques' => 'required',
-                'option1'=>'required',
-                'option2'=>'required',
-                'option3'=>'required',
-                'option4'=>'required',
+                // 'option1'=>'required',
+                // 'option2'=>'required',
+                // 'option3'=>'required',
+                // 'option4'=>'required',
                 'correctoption'=>'required',
                 'quizid' => 'required',
             ]);
@@ -29,10 +29,10 @@ class QuizController extends Controller
 
             $quizData = [
                 'ques'=> $request->ques,
-                'option1'=> $request->option1,
-                'option2'=> $request->option2,
-                'option3'=> $request->option3,
-                'option4'=> $request->option4,
+                'option1'=> @$request->option1,
+                'option2'=> @$request->option2,
+                'option3'=> @$request->option3,
+                'option4'=> @$request->option4,
                 'correctoption'=> $request->correctoption,
                 'quizid'=> $request->quizid
             ];
@@ -148,7 +148,7 @@ class QuizController extends Controller
                 return response()->json(validatorMessage($validator));
             }
 
-            $questions = QuizQuestion::where('quizid',$request->quizid)->orderByAsc('quesid')->get();
+            $questions = QuizQuestion::where('quizid',$request->quizid)->orderBy('quesid')->get();
             return customResponse(1,["list"=>$questions]);
         }catch(\Exception $e){
             return exceptionResponse($e);

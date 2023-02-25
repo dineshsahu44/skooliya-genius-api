@@ -69,7 +69,7 @@ class EventGalleryController extends Controller
                 'dateposted'=>now(),
             ];
             PhotoVideo::create($video);
-            return customResponse(1,['itemid',$request->itemid]);
+            return customResponse(1,['itemid'=>$request->itemid]);
 
         }catch(\Exception $e){
             return exceptionResponse($e);
@@ -148,10 +148,11 @@ class EventGalleryController extends Controller
                 'attachment' => 'required|mimes:'.implode(',',$acceptFiles['extension-type']).'|max:'.$acceptFiles['max-size'].'',
                 'eventdate' => 'required|date',
             ]);
-
+            
             if ($validator->fails()) {
                 return response()->json(validatorMessage($validator));
             }
+            
             if ($request->hasFile('attachment')) {
                 $attachment = saveFiles($request->file('attachment'),$acceptFiles);
             }
@@ -166,7 +167,7 @@ class EventGalleryController extends Controller
                 'companyid'=> $companyid,
                 'eventdate'=> $request->eventdate,
             ];
-            Event::create($album);
+            Event::create($event);
             return customResponse(1,["msg"=>"event created."]);
 
         }catch(\Exception $e){

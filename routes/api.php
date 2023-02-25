@@ -13,6 +13,7 @@ use App\Http\Controllers\FeesController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DeleteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,18 +25,26 @@ use App\Http\Controllers\CommentController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/', [StaticController::class,'show']);
+Route::any('/', function(){
+    return view('welcome');
+});
+Route::any('/autoattendance', [StaticController::class,'autoAttendance']);
+Route::any('/hw/gsdt', [StaticController::class,'setEpt']);
+Route::get('/takeatour.php', [StaticController::class,'takeATour']);
+
 Route::middleware('checkurl')->group(function(){
-    Route::any('/loginapi.php', [AuthController::class,'login']);
+    Route::post('/loginapi.php', [AuthController::class,'login']);
+    Route::post('/tokenhandleapi.php', [AuthController::class,'tokenHandleApi']);
     Route::group(['middleware' => 'auth.verify'], function(){
         Route::post('/checkuspassapi.php', [AuthController::class,'checkUsPass']);
         Route::post('/changepasswordapi.php', [AuthController::class,'changePassword']);
-
+        
+        
         Route::post('/createmessageapi.php', [NotificationController::class,'createMessage']);
         Route::get('/messageseeapi.php', [NotificationController::class,'getMessage']);
 
-        Route::post('/onlineclass/banner.php', [BannerController::class,'banner']);
-        Route::post('/onlineclass/classes.php', [OnilneActivityController::class,'onlineActivity']);
+        Route::any('/onlineclass/banner.php', [BannerController::class,'banner']);
+        Route::any('/onlineclass/classes.php', [OnilneActivityController::class,'onlineActivity']);
 
         Route::post('/addquizquestions.php', [QuizController::class,'addQuestion']);
         Route::post('/createquizid.php', [QuizController::class,'createQuiz']);
@@ -80,9 +89,14 @@ Route::middleware('checkurl')->group(function(){
         Route::get('/getteacherapi.php', [FacultyController::class,'getTeachers']);
         Route::post('/uploadprofilepicapi.php', [FacultyController::class,'updateFacultyPhoto']);
         Route::post('/changepermissionapi.php', [FacultyController::class,'changeFacultyPermission']);
-
+        Route::get('/teacherpermissionapi.php', [FacultyController::class,'facultyPermission']);
         Route::post('/comment/comment.php', [CommentController::class,'comments']);
+        Route::post('/deleteapi.php', [DeleteController::class,'deleteRecord']);
+        Route::get('/msgsendtoapi.php', [NotificationController::class,'msgSendToRecord']);
 
+        Route::get('/studentreportcard.php',function(){
+            return "Coming Soon";
+        });
         // Route::post('/allclasssection.php', [QuizController::class,'postQuizScore']);createfeedbackapi.php
         // 
     });

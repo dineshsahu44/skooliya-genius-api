@@ -115,7 +115,7 @@ class OnilneActivityController extends Controller
                     $liveClass = LiveClass::select(
                         'faculties.photo','faculties.name as accountname','live_classes.live_classes_id as classesid',
                         'companyid','accountid','subject','classesfor','live_classes.status as visible','posteddate',
-                        DB::raw('DATEDIFF(CURDATE(), posteddate) as nayabatch')
+                        DB::raw('if(DATEDIFF(CURDATE(), posteddate)>15,0,1) as nayabatch')
                         )
                     ->join('live_classes_for','live_classes_for.live_classes_id','live_classes.live_classes_id')
                     ->join('faculties', function ($join) {
@@ -133,7 +133,7 @@ class OnilneActivityController extends Controller
                     $liveClass = LiveClass::select(
                         'faculties.photo','faculties.name as accountname','live_classes.live_classes_id as classesid',
                         'companyid','accountid','subject','classesfor','live_classes.status as visible','posteddate',
-                        DB::raw('DATEDIFF(CURDATE(), posteddate) as nayabatch')
+                        DB::raw('if(DATEDIFF(CURDATE(), posteddate)>15,0,1) as nayabatch')
                         )
                     ->join('faculties', function ($join) {
                         $join->on('faculties.faculty_id', 'live_classes.accountid')
@@ -277,12 +277,30 @@ class OnilneActivityController extends Controller
                 $classesid = $_GET['classesid'];
                 $pageLimit = pageLimit(@$request->page);//$_GET['page']
                 if(@$request->accounttype=="student"){
-                    $classDocs = LiveDoc::select('live_docs.*','live_docs.live_docs_id as docsid')
+                    $classDocs = LiveDoc::select(
+                        DB::raw("(SELECT 0)  as countcomment"),
+                        DB::raw('if(live_docs.attachment is NULL,"",live_docs.attachment) as attachment'),
+                        'live_docs.status as visible',
+                        'live_docs.commentstatus as commentstatus',
+                        'live_docs.postdate as posteddate',
+                        'live_docs.title as title',
+                        'live_docs.type as type',
+                        'live_docs.live_docs_id as docsid'
+                        )
                     ->where([['live_classes_id',$classesid],['status',1]])
                     ->whereIn('type',['file','doclink'])
                     ->orderByDesc('postdate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
                 }else{
-                    $classDocs = LiveDoc::select('live_docs.*','live_docs.live_docs_id as docsid')
+                    $classDocs = LiveDoc::select(
+                        DB::raw("(SELECT 0)  as countcomment"),
+                        DB::raw('if(live_docs.attachment is NULL,"",live_docs.attachment) as attachment'),
+                        'live_docs.status as visible',
+                        'live_docs.commentstatus as commentstatus',
+                        'live_docs.postdate as posteddate',
+                        'live_docs.title as title',
+                        'live_docs.type as type',
+                        'live_docs.live_docs_id as docsid'
+                    )
                     ->where('live_classes_id',$classesid)
                     ->whereIn('type',['file','doclink'])
                     ->orderByDesc('postdate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
@@ -303,15 +321,27 @@ class OnilneActivityController extends Controller
                 // DB::enableQueryLog();
                 if(@$request->accounttype=="student"){
                     $classDocs = LiveDoc::select(
-                        DB::raw("(SELECT COUNT(comment_id) FROM comment WHERE activityname='video' AND activityid=live_docs_id AND readstatus!=1)  as countcomment"),'live_docs.*','live_docs.live_docs_id as docsid'
+                        DB::raw("(SELECT COUNT(comment_id) FROM comment WHERE activityname='video' AND activityid=live_docs_id AND readstatus!=1)  as countcomment"),
+                        DB::raw('if(live_docs.attachment is NULL,"",live_docs.attachment) as attachment'),
+                        'live_docs.status as visible',
+                        'live_docs.commentstatus as commentstatus',
+                        'live_docs.postdate as posteddate',
+                        'live_docs.title as title',
+                        'live_docs.type as type',
+                        'live_docs.live_docs_id as docsid'
                         )
                     ->where([['live_classes_id',$classesid],['status',1],['type','videolink']])
                     ->orderByDesc('postdate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
                 }else{
                     $classDocs = LiveDoc::select(
-                        DB::raw("(SELECT COUNT(comment_id) FROM comment WHERE activityname='video' AND activityid=live_docs_id AND readstatus!=1)  as countcomment"),'live_docs.*','live_docs.live_docs_id as docsid'
-                        )
-                    ->select('live_docs.*','live_docs.live_docs_id as docsid')
+                        DB::raw("(SELECT COUNT(comment_id) FROM comment WHERE activityname='video' AND activityid=live_docs_id AND readstatus!=1)  as countcomment"),
+                        DB::raw('if(live_docs.attachment is NULL,"",live_docs.attachment) as attachment'),
+                        'live_docs.status as visible',
+                        'live_docs.commentstatus as commentstatus',
+                        'live_docs.postdate as posteddate',
+                        'live_docs.title as title',
+                        'live_docs.type as type',
+                        'live_docs.live_docs_id as docsid')
                     ->where([['live_classes_id',$classesid],['type','videolink']])
                     ->orderByDesc('postdate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
                 }
@@ -443,7 +473,7 @@ class OnilneActivityController extends Controller
                     $classSection = getClassFromAccountID($candidateid,$GLOBALS['get_companyid']);
                     $liveClass = LiveSession::select(
                         'faculties.photo','faculties.name as accountname','classid','live_session.live_session_id as classesid',
-                        'companyid','accountid','subject','starttime','endtime','hostlive','attachment','classesfor','live_session.status as visible','posteddate'
+                        'companyid','accountid','subject','starttime','endtime','hostlive',DB::raw('if(attachment is NULL, "",attachment) as attachment'),'classesfor','live_session.status as visible','posteddate'
                         )
                     ->join('live_session_for','live_session_for.live_session_id','live_session.live_session_id')
                     ->join('faculties', function ($join) {
@@ -460,7 +490,7 @@ class OnilneActivityController extends Controller
                     // DB::enableQueryLog();
                     $liveClass = LiveSession::select(
                         'faculties.photo','faculties.name as accountname','classid','live_session.live_session_id as classesid',
-                        'companyid','accountid','subject','starttime','endtime','hostlive','attachment','classesfor','live_session.status as visible','posteddate'
+                        'companyid','accountid','subject','starttime','endtime','hostlive',DB::raw('if(attachment is NULL, "",attachment) as attachment'),'classesfor','live_session.status as visible','posteddate'
                         )
                     ->join('faculties', function ($join) {
                         $join->on('faculties.faculty_id', 'live_session.accountid')

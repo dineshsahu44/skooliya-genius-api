@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\Section;
 use App\Models\Classes;
 use App\Models\Faculty;
@@ -10,6 +11,7 @@ use App\Models\Holiday;
 use App\Models\School;
 use App\Models\FacultyAssignClass;
 use App\Models\MainScreenOption;
+use App\Models\Feedback;
 use DB;
 use Validator;
 
@@ -110,6 +112,7 @@ class StaticController extends Controller
 
     public function createFeedback(Request $request){
         try{
+            // return customResponse(1,['msg'=>$request->all()]);
             // $postedby=$_POST['postedby'];
             // $apptype=$_POST['apptype'];
             // $subject=$_POST['subject'];
@@ -153,6 +156,7 @@ class StaticController extends Controller
 
     public function getFeedback(Request $request){
         try{
+            // return $request->all();
             // $g_compnayid = $companyid;
             // $companyid=$_GET['companyid'];
             // $accountid=$_GET['accountid'];
@@ -166,7 +170,7 @@ class StaticController extends Controller
             }
 
             // $currentSession = currentSession();
-            $companyid = $request->companyid;
+            $GLOBALS['companyid'] = $companyid = $request->companyid;
             $user = getAuth();
             $faculty = Faculty::select('assignclass')->where([['faculty_id',$request->accountid],['school_id',$user->school_id]])->first();
             $assignclass = !empty($faculty->assignclass)&&$faculty->assignclass!=null?$faculty->assignclass=='all'?$allclass:$faculty->assignclass:[];
@@ -177,7 +181,7 @@ class StaticController extends Controller
                 $feedback = Feedback::select('feedbackid','postedbyid',DB::Raw("concat(postedby,'(',classes.class,'-',sections.section,')')"),'apptype','subject','description','attachment','dateposted','classes.class','sections.section')
                     ->join('registrations', function ($join) {
                         $join->on('registrations.registration_id', 'feedback.postedbyid')
-                        ->where('registrations.session',$companyid);
+                        ->where('registrations.session',$GLOBALS['companyid']);
                     })->join('classes','classes.id','registrations.class')->join('sections','sections.id','registrations.section')
                     ->where('feedback.companyid',$companyid)->whereRaw("concat_ws('-',classes.class,sections.section) IN ($temp)")
                     ->orderBy('dateposted')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
@@ -187,7 +191,7 @@ class StaticController extends Controller
                 $feedback = Feedback::select('feedbackid','postedbyid',DB::Raw("concat(postedby,'(',classes.class,'-',sections.section,')')"),'apptype','subject','description','attachment','dateposted','classes.class','sections.section')
                     ->join('registrations', function ($join) {
                         $join->on('registrations.registration_id', 'feedback.postedbyid')
-                        ->where('registrations.session',$companyid);
+                        ->where('registrations.session',$GLOBALS['companyid']);
                     })->join('classes','classes.id','registrations.class')->join('sections','sections.id','registrations.section')
                     ->where('feedback.companyid',$companyid)->orderBy('dateposted')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
             }
@@ -337,13 +341,25 @@ class StaticController extends Controller
                 return response()->json(validatorMessage($validator));
             }
             $current = currentSession();
-            $school = School::select(DB::Raw("concat(school,', ',name) as companyname"),'name as city','mobile as phone','mobile',
+            $school = School::select('school','name as city','mobile as phone','mobile',
             'email','fees_webview as machine')->where('id',$current->school_id)->first();
             if($school){
-                $school['id'] = $current->id;
-                $school['session'] = $current->name;
+                $schoolName = explode(' ',trim(strtoupper($school['school'])));
+                $acronym = "";
+                foreach ($schoolName as $s) {
+                    $acronym .= mb_substr($s, 0, 1);
+                }
+                $school['shortschoolname'] = $acronym.', '.ucwords(trim(strtolower($school['city'])));
+                $school['schoolname'] = ucwords(trim(strtolower($school['school']))).', '.ucwords(trim(strtolower($school['city'])));
+                $school['currsessionid'] = $current->id;
+                $school['currsessionyear'] = $current->name;
                 $school['session_start'] = $current->start_date;
                 $school['session_end'] = $current->end_date;
+                $school['smspart1'] = '';
+                $school['smspart2'] = '';
+                $school['smspart3'] = '';
+                $school['smspart4'] = '';
+                $school['success']=1;
             }
             $main = MainScreenOption::where([['accounttype',$request->accounttype],['status',1],['school_id',$current->school_id]])->get();
             $school['optionslist']=$main;
@@ -353,7 +369,31 @@ class StaticController extends Controller
         }
     }
 
+    public function autoAttendance(Request $request){
+        // Log::info('Attendance Record', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url(),"param"=>$_POST]);
+        Log::info('Attendance Record', ['Request' =>json_decode(file_get_contents('php://input')),"urlFull"=>$request->fullUrl()]);
+        
+        $output = [
+            'st' => "true" ,
+        ]; 
+        // echo json_encode($output);
+        return $output;
+    }
+
+    public function setEpt(Request $request){
+        $output = [
+            'sdt' => date('dmyHi') ,
+        ]; 
+        // echo json_encode($output);
+        return $output;
+    }
+
     public function show(Request $request){
         echo "ok";
+    }
+
+    public function takeATour(Request $request){
+        Log::info('Static Controller', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url(),"param"=>$_POST]);
+        return "Comming soon";
     }
 }

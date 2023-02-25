@@ -9,7 +9,7 @@ use DB;
 use App\Models\Server;
 use App\Models\User;
 use Session;
-
+use Illuminate\Support\Facades\Log;
 class CheckUrl
 {
     /**
@@ -21,12 +21,13 @@ class CheckUrl
      */
     public function handle(Request $request, Closure $next)
     {
+        Log::info('CheckUrl', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url()]);
         try{
             config::set(['database.connections.mysql' => [
                 'driver'    => 'mysql',
-                'host'      => '163.182.172.174',
-                'database'  => '3050884_test',
-                'username'  => '3050884_skooliya',
+                'host'      => '217.21.80.2',
+                'database'  => 'u210117126_3050884_test',
+                'username'  => 'u210117126_skooliya',
                 'password'  => 'Skooliya@123',
                 'charset'   => 'utf8',
                 'collation' => 'utf8_unicode_ci',
@@ -39,9 +40,9 @@ class CheckUrl
             if($server){
                 config::set(['database.connections.mysql' => [
                     'driver'    => 'mysql',
-                    'host'      => '163.182.172.174',
+                    'host'      => $server['dbhost'],
                     'database'  => $server['dbname'],
-                    'username'  => '3050884_skooliya',
+                    'username'  => $server['dbuser'],
                     'password'  => 'Skooliya@123',
                     'charset'   => 'utf8',
                     'collation' => 'utf8_unicode_ci',
@@ -51,11 +52,11 @@ class CheckUrl
                 Session::put('server',$server);
                 return $next($request);
             }else{
-                return response()->json(['success'=>0,'msg'=>'school name is not found!']);
+                return response()->json(['success'=>0,'msg'=>'school name is not found!',]);
             }
         }catch(\Exception $e){
             // dd($e);
-            return response()->json(['success'=>0,'msg'=>'error on server config!']);
+            return response()->json(['success'=>0,'msg'=>'error on server config!','errormsg'=>@$e->getMessage(),"line"=>@$e->getLine()]);
         }
     }
 }

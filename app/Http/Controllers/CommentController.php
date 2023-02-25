@@ -23,7 +23,7 @@ class CommentController extends Controller
             $acceptFiles = accpectFiles('comment-files');
             $validator = Validator::make($request->all(),[
                 'accounttype'=>'required',
-                'companyid' => 'required',
+                // 'companyid' => 'required',
                 'accountid' => 'required',
                 'activityname' => 'required',
                 'activityid' => 'required',
@@ -36,13 +36,16 @@ class CommentController extends Controller
             if ($validator->fails()) {
                 return response()->json(validatorMessage($validator));
             }
-            $currenttime = now();
+            $currenttime = date('Y-m-d H:i:s');
             $accountid = $_POST['accountid'];
             $accounttype = $_POST['accounttype'];
             $activityname = $_POST['activityname'];
             $activityid = $_POST['activityid'];
             $work = $_POST['work'];
             $lasttime = $_POST['time'];
+            // $companyid = $request->companyid;
+            $currentSession = currentSession();
+            $companyid= $currentSession->id;
             
             if($work=="insertcomment"){
 
@@ -53,7 +56,7 @@ class CommentController extends Controller
                 }
                 
                 if($accounttype=="student"){
-                    $record = Registration::select('registrations.name',DB::Raw("CONCAT('classes.class','-','sections.section') as accounttype"))
+                    $record = Registration::select('registrations.name',DB::Raw("CONCAT(classes.class,'-',sections.section) as accounttype"))
                         ->join('classes','classes.id','registrations.class')->join('sections','sections.id','registrations.section')
                         ->where([['registration_id',$accountid],['session',$companyid]])->first();
                 }else if($accounttype=="teacher"){
@@ -79,20 +82,22 @@ class CommentController extends Controller
                 return customResponse(1,$result);
             }elseif($work=="fetchcomment"){
                 if($accounttype=='student'){
-                    $sql = "SELECT `comment_id`,`accountid`, `accountname`,`comment`,`attachment`, 
+                    $sql = "SELECT `comment_id` commentid,`accountid`, `accountname`,`comment`,`attachment`, 
                     `accounttype`, `activityname`, `activityid`, `time` FROM 
                     (SELECT `comment_id`,`accountid`, `accountname`,`comment`,`attachment`, `accounttype`, 
                     `activityname`, `apptype`, `activityid`, `time` from `comment` where activityid='$activityid' 
                     and activityname='$activityname' and time>'$lasttime' order by time ASC) as t1 
                     WHERE t1.accountid='$accountid' OR t1.apptype='teacher'";
-                    $data = DB::select($sql)->get();
+                    
+                    $data = DB::select($sql);
                 }else{
-                    $sql = "SELECT `comment_id`,`accountid`, 
-                    concat(`accountid`,' - ',`accountname`),`comment`,`attachment`, `accounttype`, `activityname`, `activityid`, 
+                    $sql = "SELECT `comment_id` commentid,`accountid`, 
+                    concat(`accountid`,' - ',`accountname`) accountname,`comment`,`attachment`, `accounttype`, `activityname`, `activityid`, 
                     `time` from `comment` where activityid='$activityid' and activityname='$activityname' and time>'$lasttime' 
                     order by time ASC";
-                    Comment::where([['activityid',$activityid],['activityname',$activityname],['time','<=',$lasttime]])->update(['readstatus'=>1]);
-                    $data = DB::select($sql)->get();
+                    // $ok = Comment::where([['activityid',$activityid],['activityname',$activityname],['time','<=',$lasttime]])->update(['readstatus'=>0]);
+                    // dd($ok);
+                    $data = DB::select($sql);
                 }
                 $result['currenttime']=$currenttime;
                 $result['data']=$data;
