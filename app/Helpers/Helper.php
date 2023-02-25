@@ -74,14 +74,14 @@ use Log;
 
     function getHostInfoAndDatabase(){
         return [
-            'http://localhost'=>[
+            'local'=>[
                 'host'=>'217.21.80.2',
                 'database'  => 'u210117126_3050884_test',
                 'username'  => 'u210117126_skooliya',
                 'password'  => 'Skooliya@123',
             ],
-            'https://api.shardasolutions.com'=>[
-                'host'=>'217.21.80.2',
+            'production'=>[
+                'host'=>'localhost',
                 'database'  => 'u210117126_3050884_test',
                 'username'  => 'u210117126_skooliya',
                 'password'  => 'Skooliya@123',

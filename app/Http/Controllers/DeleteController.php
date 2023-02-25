@@ -36,40 +36,15 @@ class DeleteController extends Controller
         try{
             $id = $request->id;
             $posttype = $request->posttype;
-            if($posttype==='event')
-            {
+            if($posttype==='event'){
                 $deleteResult = Event::where('eventid',$id)->delete();
             }else if($posttype==='message'){
-                $deleteResult = HwMessage::leftJoin('hwmessagefor','hwmessagefor.msgid','hwmessage.msgid')
-                ->where('hwmessage.msgid',$id)->delete();
+                $deleteResult = DB::delete("DELETE hwmessage,hwmessagefor FROM hwmessage LEFT JOIN hwmessagefor ON hwmessagefor.msgid = hwmessage.msgid WHERE hwmessage.msgid = $id");
             }else if($posttype==='quiz'){
-                $deleteResult1 = QuizFor::leftJoin()
-                ->where('quizid',$id)->delete();
-                if($deleteResult1){
-                    $deleteResult = QuizQuestion::where('quizid',$id)->delete();
-                }
-                // $stmt = $conn->prepare("DELETE FROM quizfor WHERE quizid= $id");
-
-                // if($stmt->execute())
-                // {
-
-                // $result['success']=1;
-
-                // $stmt1=$conn->prepare("DELETE FROM quizquestions WHERE quizid= $id");
-                // $stmt1->execute();
-
-                // echo json_encode($result);
-                // }
-                // {
-                // $result['success']=0;
-                // echo json_encode($result);
-                // }
+                $deleteResult = DB::delete("DELETE quizfor,quizquestions FROM quizfor LEFT JOIN quizquestions ON `quizquestions`.`quizid` = `quizfor`.`quizid` WHERE quizfor.`quizid` = $id");
             }else if($posttype==='album'){
-                $deleteResult1 = Album::where('albumid',$id)->delete();
-                if($deleteResult1){
-                    $deleteResult = PhotoVideo::where('albumid',$id)->delete();
-                }
-
+                $deleteResult = DB::delete("DELETE albums,photosvideos FROM albums LEFT JOIN photosvideos ON photosvideos.albumid = albums.albumid WHERE albums.albumid = $id");
+                            
                 // $sql = "SELECT imageurl FROM `albums` WHERE albumid='$id'";
                 // $stmt = $conn->prepare($sql);
                 // $stmt->execute();
@@ -179,7 +154,7 @@ class DeleteController extends Controller
             if(@$deleteResult){
                 return customResponse(1,['msg'=>'Successfully Deleted!']);
             }else{
-                return customResponse(1,['msg'=>'Delete Fail!']);
+                return customResponse(0,['msg'=>'Delete Fail!']);
             }
             return customResponse(1,['students'=>$students]);
         }catch(\Exception $e){

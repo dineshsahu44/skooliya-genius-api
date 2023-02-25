@@ -25,7 +25,7 @@ class CheckUrl
         try{
             config::set(['database.connections.mysql' => [
                 'driver'    => 'mysql',
-                'host'      => '217.21.80.2',
+                'host'      => env('APP_ENV')=="local"?'217.21.80.2':"localhost",
                 'database'  => 'u210117126_3050884_test',
                 'username'  => 'u210117126_skooliya',
                 'password'  => 'Skooliya@123',
@@ -40,7 +40,7 @@ class CheckUrl
             if($server){
                 config::set(['database.connections.mysql' => [
                     'driver'    => 'mysql',
-                    'host'      => $server['dbhost'],
+                    'host'      => env('APP_ENV')=="local"?'217.21.80.2':"localhost",//$server['dbhost'],
                     'database'  => $server['dbname'],
                     'username'  => $server['dbuser'],
                     'password'  => 'Skooliya@123',
