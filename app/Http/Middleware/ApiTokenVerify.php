@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; 
+use Log;
 
 class ApiTokenVerify
 {
@@ -22,15 +23,21 @@ class ApiTokenVerify
             if(Auth::guard('api')->check()){
                 return $next($request);
             }else{
-                return response()->json([
+                $data = [
                     'msg' => 'Token not found!',
+                    // 'license' => 0,
                     'success'=>0
-                ]);
+                ];
+                Log::info('ApiTokenVerify-Middleware', ["response"=>$data]);
+                return response()->json($data);
             }
         }
-        return response()->json([
+        $data = [
             'msg' => 'Not a valid API request.',
+            // 'license' => 0,
             'success'=>0
-        ]);
+        ];
+        Log::info('ApiTokenVerify-Middleware', ["response"=>$data]);
+        return response()->json($data);
     }
 }

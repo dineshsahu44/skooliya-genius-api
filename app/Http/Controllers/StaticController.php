@@ -342,7 +342,7 @@ class StaticController extends Controller
             }
             $current = currentSession();
             $school = School::select('school','name as city','mobile as phone','mobile',
-            'email','fees_webview as machine')->where('id',$current->school_id)->first();
+            'email','fees_webview as machine')->where('id',$current->school_id)->first();//machine value// form webview
             if($school){
                 $schoolName = explode(' ',trim(strtoupper($school['school'])));
                 $acronym = "";
@@ -360,6 +360,7 @@ class StaticController extends Controller
                 $school['smspart3'] = '';
                 $school['smspart4'] = '';
                 $school['success']=1;
+                $school['machine']=1;//machine value// form webview
             }
             $main = MainScreenOption::where([['accounttype',$request->accounttype],['status',1],['school_id',$current->school_id]])->get();
             $school['optionslist']=$main;

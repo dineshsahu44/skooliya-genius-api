@@ -136,7 +136,10 @@ class AuthController extends Controller
         $msgTable = ["msg"=>"record not found in table!"];
         $link = [['title' => 'Learn hindi Alphabets and words', 'link' => 'https://www.youtube.com/watch?v=U3MfXjiL0rM', 'subject' => 'Hindi'], ['title' => 'Classroom Demonstration English', 'link' => 'https://www.youtube.com/watch?v=-X7okpS9Ufc', 'subject' => 'English']];
         try{
-            if($user = getAuth()){
+            // return customResponse(0,$msgUnauth);
+            if($user = @getAuth()){
+                // dd($user);
+                // return customResponse(0,$msgUnauth);
                 if($request->apptype=="student"){
                     $currentSession = currentSession();
                     $companyid= $currentSession->id;
@@ -311,7 +314,7 @@ class AuthController extends Controller
                 }elseif($request->apptype=="teacher"){
                     $value = $request->action=='update'?$request->token:'';
                     // $o = User::where([['role','!=','student'],['school_id',$user->school_id],['username',$request->accountid]])->update(['device_token'=>$value]);
-                    $o = User::where([['role','!=','student'],['username',$request->accountid]])->update(['device_token'=>$value]);
+                    User::where([['role','!=','student'],['username',$request->accountid]])->update(['device_token'=>$value]);
                     // Log::info('token1', ["response"=>$o]);
                 }
                 return customResponse(1);
