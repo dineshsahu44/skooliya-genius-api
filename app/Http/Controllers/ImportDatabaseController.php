@@ -1084,13 +1084,13 @@ class ImportDatabaseController extends Controller
     public function setConnection($database){
         $conf = [
                     'local'=>['host'=>'localhost','username'=>'root','password'=>''],
-                    'production'=>['host'=>'163.182.172.174','username'=>'3050884_skooliya','password'=>'Skooliya@123']
+                    'production'=>['host'=>'217.21.80.2','username'=>'3050884_skooliya','password'=>'Skooliya@123']
                 ];
         config::set(['database.connections.mysql' => [
             'driver'    => 'mysql',
-            'host'      => $conf[env('APP_ENV')]['host'],
-            'username'  => $conf[env('APP_ENV')]['username'],
-            'password'  => $conf[env('APP_ENV')]['password'],
+            'host'      => (env('APP_ENV')=="local"?'217.21.80.2':"localhost"),//$conf[env('APP_ENV')]['host'],
+            'username'  => ($database=='u210117126_skooliya_tms'?'u210117126_skooliya2':$database),//$conf[env('APP_ENV')]['username'],
+            'password'  => 'Skooliya@123',//$conf[env('APP_ENV')]['password'],
             'database'  => $database,
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',

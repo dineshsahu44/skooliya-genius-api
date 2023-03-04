@@ -173,7 +173,7 @@ class StaticController extends Controller
             $GLOBALS['companyid'] = $companyid = $request->companyid;
             $user = getAuth();
             $faculty = Faculty::select('assignclass')->where([['faculty_id',$request->accountid],['school_id',$user->school_id]])->first();
-            $assignclass = !empty($faculty->assignclass)&&$faculty->assignclass!=null?$faculty->assignclass=='all'?$allclass:$faculty->assignclass:[];
+            $assignclass = !empty($faculty->assignclass)&&$faculty->assignclass!=null?$faculty->assignclass=='all'?'all':$faculty->assignclass:[];
             $feedback = [];
             if(json_decode($assignclass,true)>0){
                 $pageLimit = pageLimit(@$request->page);
@@ -187,7 +187,7 @@ class StaticController extends Controller
                     ->orderBy('dateposted')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
             }elseif($assignclass=='all'){
                 $pageLimit = pageLimit(@$request->page);
-                $temp = implodeClass($assignclass);
+                // $temp = implodeClass($assignclass);
                 $feedback = Feedback::select('feedbackid','postedbyid',DB::Raw("concat(postedby,'(',classes.class,'-',sections.section,')')"),'apptype','subject','description','attachment','dateposted','classes.class','sections.section')
                     ->join('registrations', function ($join) {
                         $join->on('registrations.registration_id', 'feedback.postedbyid')

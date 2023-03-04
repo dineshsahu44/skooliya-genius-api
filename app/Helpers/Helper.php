@@ -6,7 +6,7 @@ use App\Models\Registration;
 use App\Models\Faculty;
 use App\Models\User;
 use Carbon\Carbon;
-use Log;
+// use Log;
 
     function customResponse($type, $data=null){
         $success = $type==1?1:0;

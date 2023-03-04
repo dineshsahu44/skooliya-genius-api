@@ -26,7 +26,11 @@ class AuthController extends Controller
         $msgUnauth = ["msg"=>"unauthorized access!"];
         $msgTable = ["msg"=>"record not found in table!"];
         try{
-            $user = User::where([['username',$request->username],['password',$request->password]])->first();
+            $user = User::where([
+                ['username',$request->username],
+                ['password',$request->password],
+                ['role',($request->apptype=="student"?'=':'!='),'student']
+                ])->first();
             // dd($user);
             if($user){
                 Token::where('user_id', $user->id)->update(['revoked' => true]);
@@ -90,7 +94,7 @@ class AuthController extends Controller
                             "teacherinfo"=> [
                                 "success"=> 1,
                                 "accountid"=> $faculty->faculty_id,
-                                "accounttype"=> $user->role,
+                                "accounttype"=> $user->role=="admin"?"admin":"teacher",
                                 "accountname"=> $faculty->name,
                                 "photo"=> $faculty->photo,
                                 "address1"=> $faculty->address,
