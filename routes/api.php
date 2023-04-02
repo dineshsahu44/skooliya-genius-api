@@ -97,7 +97,65 @@ Route::middleware('checkurl')->group(function(){
         Route::get('/studentreportcard.php',function(){
             return "Coming Soon";
         });
+        Route::get('/leaverequest',function(){
+            return "Coming Soon";
+        });
+        Route::get('/parentsleaverequest',function(){
+            return "Coming Soon";
+        });
+        Route::get('/parentsattendance',function(){
+            return "Coming Soon";
+        });
         // Route::post('/allclasssection.php', [QuizController::class,'postQuizScore']);createfeedbackapi.php
         // 
+    });
+});
+Route::group(['prefix' => "{schoolname}", 'middleware' => 'checkofflineapi'], function () {
+    Route::any('/admission.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/attendanceclasswise.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/attendancestudentwise.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/check.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/delcomp.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/enquiry.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/feestransaction.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/feesvoucher.php',function(){
+        return "Coming Soon";
+    });
+    Route::any('/fileuploads.php',function(){
+        return "Coming Soon";
+    });
+    
+    Route::any('/jsonbus.php',function(){
+        return "Coming Soon";
+    });
+    
+    Route::any('/jsoncompany.php',function(){
+        return "Coming Soon";
+    });
+    
+    Route::any('/pic.php',function(){
+        return "Coming Soon";
+    });
+    
+    Route::any('/setting.php',function(){
+        return "Coming Soon";
+    });
+    
+    Route::any('/teachers.php',function(){
+        return "Coming Soon";
     });
 });

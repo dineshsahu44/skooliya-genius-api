@@ -17,6 +17,7 @@ use App\Models\BirthdayCard;
 use App\Models\LiveClass;
 use App\Models\LiveClassFor;
 
+use Validator;
 use DB;
 
 class AuthController extends Controller

@@ -362,7 +362,9 @@ class StaticController extends Controller
                 $school['success']=1;
                 $school['machine']=1;//machine value// form webview
             }
-            $main = MainScreenOption::where([['accounttype',$request->accounttype],['status',1],['school_id',$current->school_id]])->get();
+            $main = MainScreenOption::where([['accounttype',$request->accounttype],['status',1],['school_id',$current->school_id]])
+            ->orderBy('id')
+            ->get();
             $school['optionslist']=$main;
             return customResponse(1,$school);
         }catch(\Exception $e){
