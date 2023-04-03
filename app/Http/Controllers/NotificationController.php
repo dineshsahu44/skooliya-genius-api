@@ -93,7 +93,7 @@ class NotificationController extends Controller
                         'commentstatus'=>$commentstatus,
                         'entrydate'=>now(),
                     ];
-                    DB::beginTransaction();
+                    // DB::beginTransaction();
                     $HwMessage = HwMessage::create($data);
                     if($HwMessage->id){
                         $msgid=$HwMessage->id;
@@ -128,13 +128,15 @@ class NotificationController extends Controller
                         HwMessageFor::insert($messagefor);
                         
                         $result = customResponse(1,$this->successMsg);
+                        echo json_encode($result);
                         if(count($record)>0){
                             send_notification($msgheading,notificationType($msgtype)['title'],notificationType($msgtype)['apptype'],$record);
                         }
+                        die;
                     }else{
                         $result = customResponse(0,$this->errorMsg);
                     }
-                    DB::commit();
+                    // DB::commit();
                     return $result;
                 }catch(\Exception $e){
                     DB::rollback();
@@ -162,10 +164,12 @@ class NotificationController extends Controller
         //temparary script to sms testing return
         $result['sms'] = $smsflag=="true"?1:-1;//-1 sms button not true//0 sending failed//1 success        
         $result['msgid']=$msgid;
+        echo json_encode($result);
         if(count($sendFor)>0){
             $record = User::select('username','device_token as token')->whereIn('username',$sendFor)->get()->toArray();
             send_notification($msgheading,notificationType($msgtype)['title'],notificationType($msgtype)['apptype'],$record);
         }
+        die;
         return $result;
     }
 

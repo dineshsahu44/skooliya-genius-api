@@ -175,56 +175,58 @@ use Carbon\Carbon;
 
     function send_notification($body,$title,$notificationtype,$record)
     {
-        //everyone=1 means all, 2 means tokenlistgiven, 3 means teacher only
+        
+        try{
+            //everyone=1 means all, 2 means tokenlistgiven, 3 means teacher only
        
-        //session_write_close(); //close the session
-        //ignore_user_abort(true); //Prevent echo, print, and flush from killing the script
-        //fastcgi_finish_request(); //this returns 200 to the user, and processing continues
-        //litespeed_finish_request();//use this for litespeed php this returns 200 to the user, and processing continues
-        // try{
-        $filteredRecord = Arr::where($record, function ($value, $key) {
-            return !empty($value['token'])&& $value['token']!= null;
-        });
-        // dd($filteredRecord,getServerInfo()->API_ACCESS_KEY);
-        foreach($filteredRecord as $fr){
-            $data = array
-                (
-                    'id'  =>$fr['username'],
-                    'body' 	=> $body,
-                    'title'	=> $title,
-                    'notificationtype' => $notificationtype
-                );
-                
-            $fields = array
-                (
-                    'registration_ids' => [$fr['token']],
-                    'priority' => 'high',
-                    'data'	=> $data,
-                    
-                );
-                
-            $headers = array
-                (
-                    'Authorization: key=' . getServerInfo()->API_ACCESS_KEY,
-                    'Content-Type: application/json'
-                );
+            //session_write_close(); //close the session
+            // ignore_user_abort(true); //Prevent echo, print, and flush from killing the script
+            // fastcgi_finish_request(); //this returns 200 to the user, and processing continues
+            litespeed_finish_request();//use this for litespeed php this returns 200 to the user, and processing continues
 
-                // dd($data,$fields,$headers);
-            #Send Reponse To FireBase Server	
-            $ch = curl_init();
-            curl_setopt( $ch,CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send' );
-            curl_setopt( $ch,CURLOPT_POST, true );
-            curl_setopt( $ch,CURLOPT_HTTPHEADER, $headers );
-            curl_setopt( $ch,CURLOPT_RETURNTRANSFER, true );
-            curl_setopt( $ch,CURLOPT_SSL_VERIFYPEER, false );
-            curl_setopt( $ch,CURLOPT_POSTFIELDS, json_encode( $fields ) );
-            $result = curl_exec($ch );
-            // echo $result;
-            curl_close( $ch );
+            $filteredRecord = Arr::where($record, function ($value, $key) {
+                return !empty($value['token'])&& $value['token']!= null;
+            });
+            // dd($filteredRecord,getServerInfo()->API_ACCESS_KEY);
+            foreach($filteredRecord as $fr){
+                $data = array
+                    (
+                        'id'  =>$fr['username'],
+                        'body' 	=> $body,
+                        'title'	=> $title,
+                        'notificationtype' => $notificationtype
+                    );
+                    
+                $fields = array
+                    (
+                        'registration_ids' => [$fr['token']],
+                        'priority' => 'high',
+                        'data'	=> $data,
+                        
+                    );
+                    
+                $headers = array
+                    (
+                        'Authorization: key=' . getServerInfo()->API_ACCESS_KEY,
+                        'Content-Type: application/json'
+                    );
+
+                    // dd($data,$fields,$headers);
+                #Send Reponse To FireBase Server	
+                $ch = curl_init();
+                curl_setopt( $ch,CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send' );
+                curl_setopt( $ch,CURLOPT_POST, true );
+                curl_setopt( $ch,CURLOPT_HTTPHEADER, $headers );
+                curl_setopt( $ch,CURLOPT_RETURNTRANSFER, true );
+                curl_setopt( $ch,CURLOPT_SSL_VERIFYPEER, false );
+                curl_setopt( $ch,CURLOPT_POSTFIELDS, json_encode( $fields ) );
+                $result = curl_exec($ch );
+                // echo $result;
+                curl_close( $ch );
+            }
+        }catch(\Exception $e){
+            return exceptionResponse($e);
         }
-        // }catch(\Exception $e){
-        //     dd($e);
-        // }
     }
 
     function notificationType($type=null){
