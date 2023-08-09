@@ -26,10 +26,10 @@ class CheckOfflineApi
         try{
             config::set(['database.connections.mysql' => [
                 'driver'    => 'mysql',
-                'host'      => env('APP_ENV')=="local"?'217.21.80.2':"localhost",
-                'database'  => 'u210117126_test',
-                'username'  => 'u210117126_test',
-                'password'  => 'Skooliya@123',
+                'host'      => 'localhost',//env('APP_ENV')=="local"?'217.21.80.2':"localhost",
+                'database'  => '3050884_test',//'u210117126_test',
+                'username'  => 'root',//'u210117126_test',
+                'password'  => '',//'Skooliya@123',
                 'charset'   => 'utf8',
                 'collation' => 'utf8_unicode_ci',
                 'prefix'    => '',
@@ -41,24 +41,24 @@ class CheckOfflineApi
             if($server){
                 config::set(['database.connections.mysql' => [
                     'driver'    => 'mysql',
-                    'host'      => env('APP_ENV')=="local"?'217.21.80.2':"localhost",//$server['dbhost'],
+                    'host'      => /*env('APP_ENV')=="local"?'217.21.80.2':"localhost",*/$server['dbhost'],
                     'database'  => $server['dbname'],
                     'username'  => $server['dbuser'],
-                    'password'  => 'Skooliya@123',
+                    'password'  => '','Skooliya@123',
                     'charset'   => 'utf8',
                     'collation' => 'utf8_unicode_ci',
                     'prefix'    => '',
                     'strict'    => false,
                 ]]);
                 Session::put('server',$server);
-                Log::info('CheckOfflineApi', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url()]);
-                return response()->json(['success'=>1,'msg'=>'school name found!','message'=>'done','id'=>2,]);
+                Log::info('CheckOfflineApi middleware', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url()]);
                 return $next($request);
             }else{
-                Log::info('CheckOfflineApi', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url()]);
+                Log::info('CheckOfflineApi middleware', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url()]);
                 return response()->json(['success'=>0,'msg'=>'school name is not found!',]);
             }
         }catch(\Exception $e){
+            Log::info('CheckOfflineApi middleware', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url(),'msg'=>'error on server config!','errormsg'=>@$e->getMessage(),"line"=>@$e->getLine()]);
             // dd($e);
             return response()->json(['success'=>0,'msg'=>'error on server config!','errormsg'=>@$e->getMessage(),"line"=>@$e->getLine()]);
         }

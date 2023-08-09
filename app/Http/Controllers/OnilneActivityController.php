@@ -17,7 +17,7 @@ class OnilneActivityController extends Controller
     public function onlineActivity(Request $request){
         try{
             //$_GET['work'],$request->work
-            $success = ["msg"=>"@$request->work successfully done."];
+            $success = ["msg"=>@$request->work." successfully done."];
             if ($request->work == 'insertclass') {
                 $validator = Validator::make($request->all(),[
                     'accountid' => 'required',
@@ -164,6 +164,7 @@ class OnilneActivityController extends Controller
                 $classid = $request->classid;
                 $status = $request->visible;
                 $title = $request->title;
+                $itemid = @$request->itemid;
                 $appNoti = [
                     "file"=>[
                         "body"=>"New File Added",
@@ -214,6 +215,7 @@ class OnilneActivityController extends Controller
                     if(count($record)>0)
                         send_notification($appNoti[$type]['body'],$liveClass->subject,$appNoti[$type]['app'],$record);
                 }
+                $success['itemid'] = $itemid;
                 return customResponse(1,$success);
             }elseif ($request->work == 'deletedocs') {
                 $validator = Validator::make($request->all(),[

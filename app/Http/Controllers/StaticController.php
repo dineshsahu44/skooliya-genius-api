@@ -365,6 +365,12 @@ class StaticController extends Controller
             $main = MainScreenOption::where([['accounttype',$request->accounttype],['status',1],['school_id',$current->school_id]])
             ->orderBy('id')
             ->get();
+            $main_screen = mainScreenToAll($request->accounttype);
+            if(@$main_screen){
+                foreach($main_screen as $m){
+                    $main[] = $m;
+                }
+            }
             $school['optionslist']=$main;
             return customResponse(1,$school);
         }catch(\Exception $e){

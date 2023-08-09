@@ -104,7 +104,7 @@ use Carbon\Carbon;
                     'png','jpeg','jpg','gif','pdf','xlsx','docs'
                 ],
                 "path"=>"app/photo",
-                "max-size"=>500//kb
+                "max-size"=>5000//kb
             ],
             "banner-files"=>[
                 "extension-type"=>[
@@ -598,6 +598,66 @@ use Carbon\Carbon;
             ]; 
     
         return ["oauth_clients"=>$oauth_clients,"oauth_personal_access_clients"=>$oauth_personal_access_clients];
+    }
+
+    function mainScreenToAll($accounttype){
+        $mainscreen = [
+            "student"=>[
+                [
+                    "optionname"=> "Leave Request",
+                    "iconurl"=> "https://icons.veryicon.com/png/o/business/personnel-icon/leave-request-2.png",
+                    "color"=> "#9b50a0",
+                    "redirecturl"=> "https://web.skooliya.com/Leaves/applyleave?role=student",
+                    "accounttype"=> "student",
+                    "activityname"=> "Leave Request",
+                ],
+                [
+                    "optionname"=> "Parent's Leave",
+                    "iconurl"=> "https://api.skooliya.com/images/leave-request.png",
+                    "color"=> "#4285f4",
+                    "redirecturl"=> "https://web.skooliya.com/Leaves/applyleave?role=guardian",
+                    "accounttype"=> "student",
+                    "activityname"=> "Parent's Leave Request",
+                ],
+                [
+                    "optionname"=> "Parent's Attendance",
+                    "iconurl"=> "https://api.skooliya.com/images/attendance-icon.png",
+                    "color"=> "#34a853",
+                    "redirecturl"=> "https://api.skooliya.com/api/parentsattendance?role=guardian",
+                    "accounttype"=> "student",
+                    "activityname"=> "Parent's Attend",
+                ]
+            ],
+            "teacher"=>[
+                [
+                    "optionname"=> "Leave Request",
+                    "iconurl"=> "https://icons.veryicon.com/png/o/business/personnel-icon/leave-request-2.png",
+                    "color"=> "#9b50a0",
+                    "redirecturl"=> "https://web.skooliya.com/Leaves/applyleave?role=staff&apptype=faculty",
+                    "accounttype"=> "teacher",
+                    "activityname"=> "Leave Request",
+                ],
+            ],
+            "admin"=>[
+                [
+                    "optionname"=> "Leave Request",
+                    "iconurl"=> "https://icons.veryicon.com/png/o/business/personnel-icon/leave-request-2.png",
+                    "color"=> "#9b50a0",
+                    "redirecturl"=> "https://web.skooliya.com/Leaves/applyleave?role=staff&apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=> "Leave Request",
+                ],
+                [
+                    "optionname"=> "Approve Leave",
+                    "iconurl"=> "https://icons.veryicon.com/png/o/business/personnel-icon/leave-request-2.png",
+                    "color"=> "#9b50a0",
+                    "redirecturl"=> "https://web.skooliya.com/Leaves/approveleave?role=staff&apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=> "Approve Leave",
+                ],
+            ]
+        ];
+        return @$mainscreen[$accounttype];
     }
 /*
     function schoolStatus(){

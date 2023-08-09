@@ -164,7 +164,7 @@ class StudentController extends Controller
                 $facluty_id = $_GET['accountid'];
                 $sql = checkFacultyClassGetRaw($class,$section,$facluty_id,$companyid);
                 // DB::enableQueryLog();
-                $attStudent = Registration::select('registrations.id','registrations.registration_id as studentid','registrations.name','registrations.roll_no as rollno',
+                $attStudent = Registration::select('registrations.id','registrations.registration_id as studentid','registrations.name',DB::Raw("IF(ISNULL(registrations.roll_no), 0, registrations.roll_no) as rollno"),
                 'classes.class','sections.section',DB::Raw("IF(ISNULL(attendances.id)=1,'',GROUP_CONCAT(JSON_OBJECT('id',attendances.id,'entrydate',attendances.att_date,
                 'attendancevalue',attendances.att_status,'remarks',attendances.remark))) as attendancerecord"))
                 ->leftJoin('attendances', function ($join) {

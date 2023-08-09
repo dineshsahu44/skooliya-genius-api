@@ -34,6 +34,7 @@ class FacultyController extends Controller
             'city','state','phone as mobile','dob as birthday','dob as anniversary',
             DB::Raw("IF(users.device_token IS NULL or users.device_token = '', 0, 1) as notificationflag"))
             ->join('users','users.username',DB::Raw('faculties.faculty_id and users.role!="student"'))
+            ->whereNotIn('faculties.faculty_id',array(1,2,3))
             ->where([['faculties.status','Active'],['faculties.school_id',$getsessioninfo->school_id]])
             ->orderBy('accountname')
             ->get();

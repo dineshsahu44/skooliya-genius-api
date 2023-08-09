@@ -14,6 +14,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DeleteController;
+use App\Http\Controllers\OfflineApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,10 +99,12 @@ Route::middleware('checkurl')->group(function(){
             return "Coming Soon";
         });
         Route::get('/leaverequest',function(){
-            return "Coming Soon";
+            $v = 'Please Reload Data Follow These Steps<br><img src="https://p7.hiclipart.com/preview/35/345/173/hamburger-button-menu-bar-computer-icons-horizontal-line.jpg" width="30", height="30"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Font_Awesome_5_solid_arrow-right.svg/1200px-Font_Awesome_5_solid_arrow-right.svg.png" width="30" height="30"> Reload Data';
+            return $v;
         });
         Route::get('/parentsleaverequest',function(){
-            return "Coming Soon";
+            $v = 'Please Reload Data Follow These Steps<br><img src="https://p7.hiclipart.com/preview/35/345/173/hamburger-button-menu-bar-computer-icons-horizontal-line.jpg" width="30", height="30"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Font_Awesome_5_solid_arrow-right.svg/1200px-Font_Awesome_5_solid_arrow-right.svg.png" width="30" height="30"> Reload Data';
+            return $v;
         });
         Route::get('/parentsattendance',function(){
             return "Coming Soon";
@@ -110,9 +113,9 @@ Route::middleware('checkurl')->group(function(){
         // 
     });
 });
-Route::group(['prefix' => "{schoolname}", 'middleware' => 'checkofflineapi'], function () {
+Route::group(['prefix' => "offline/{schoolname}", 'middleware' => 'checkofflineapi'], function () {
     Route::any('/admission.php',function(){
-        return "Coming Soon";
+        return "Coming Soon";//OfflineApiController
     });
     Route::any('/attendanceclasswise.php',function(){
         return "Coming Soon";
@@ -121,9 +124,6 @@ Route::group(['prefix' => "{schoolname}", 'middleware' => 'checkofflineapi'], fu
         return "Coming Soon";
     });
     Route::any('/check.php',function(){
-        return "Coming Soon";
-    });
-    Route::any('/delcomp.php',function(){
         return "Coming Soon";
     });
     Route::any('/enquiry.php',function(){
@@ -143,10 +143,8 @@ Route::group(['prefix' => "{schoolname}", 'middleware' => 'checkofflineapi'], fu
         return "Coming Soon";
     });
     
-    Route::any('/jsoncompany.php',function(){
-        return "Coming Soon";
-    });
-    
+    Route::any('/jsoncompany.php',[OfflineApiController::class,'company']);
+    Route::any('/delcomp.php',[OfflineApiController::class,'deleteCompany']);
     Route::any('/pic.php',function(){
         return "Coming Soon";
     });

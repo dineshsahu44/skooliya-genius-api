@@ -196,14 +196,18 @@ class NotificationController extends Controller
                 ,'hwmessage.entrydate','hwmessage.postedbyid','hwmessage.postedby',DB::Raw("if(hwmessage.attachment IS NULL ,'',hwmessage.attachment ) as attachment"),
                 'hwmessage.msgtype','hwmessage.commentstatus',DB::Raw("1 as smsflag"))
                 ->where([['companyid',$request->companyid],['postedbyid',$request->accountid]])
-                ->orderByDesc('entrydate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
+                ->orderByDesc('entrydate')->offset($pageLimit->offset)->limit($pageLimit->limit)
+                ->groupBy('hwmessage.msgid')
+                ->get();
             }elseif($request->flag=='showforme'){
                 $hwmessage = HwMessage::select(DB::Raw("0 as countcomment"),'hwmessage.msgid','hwmessage.msgheading','hwmessage.msgbody'
                 ,'hwmessage.entrydate','hwmessage.postedbyid','hwmessage.postedby',DB::Raw("if(hwmessage.attachment IS NULL ,'',hwmessage.attachment ) as attachment"),
                 'hwmessage.msgtype','hwmessage.commentstatus',DB::Raw("1 as smsflag"))
                 ->join('hwmessagefor','hwmessagefor.msgid','hwmessage.msgid')
                 ->where([['companyid',$request->companyid],['studentid',$request->accountid]])
-                ->orderByDesc('entrydate')->offset($pageLimit->offset)->limit($pageLimit->limit)->get();
+                ->orderByDesc('entrydate')->offset($pageLimit->offset)->limit($pageLimit->limit)
+                ->groupBy('hwmessage.msgid')
+                ->get();
             }
             
             return customResponse(1,['list'=>$hwmessage]);
