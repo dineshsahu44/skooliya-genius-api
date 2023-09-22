@@ -122,7 +122,7 @@ class FeesController extends Controller
             'fee_transections.transection_id as ReceiptNo',
             DB::raw("DATE_FORMAT(fee_transections.t_date, '%d-%m-%Y') as ReceiptDate"),
             'student_fee_details.registration_id as AppID',
-            DB::raw("GROUP_CONCAT(DISTINCT LEFT(student_fee_details.month, 3) ORDER BY student_fee_details.start_month ASC) AS Months"),
+            DB::raw("GROUP_CONCAT(DISTINCT LEFT(student_fee_details.month, 3) ORDER BY student_fee_details.start_month ASC SEPARATOR ', ') AS Months"),
             DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT(
                         "fhead",
                         (CASE WHEN student_fee_details.structure_status="T FEE" THEN "Transport Fee" WHEN student_fee_details.structure_status="DUE FEE" THEN "Last Due" ELSE heads.head END),
@@ -190,7 +190,7 @@ class FeesController extends Controller
                     "structure_status", student_fee_details.structure_status,
                     "defult_amount", student_fee_details.defult_amount
                 )), "]") AS object,
-                GROUP_CONCAT(DISTINCT LEFT(student_fee_details.month, 3) ORDER BY student_fee_details.start_month ASC) AS Months,
+                GROUP_CONCAT(DISTINCT LEFT(student_fee_details.month, 3) ORDER BY student_fee_details.start_month ASC SEPARATOR ", ") AS Months,
                 student_fee_details.registration_id AS AppID,
                 FT.default_amount,
                 FT.discount,

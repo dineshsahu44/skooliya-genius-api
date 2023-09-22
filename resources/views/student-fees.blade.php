@@ -375,7 +375,7 @@
                                     <div class="col-xs-12">
                                         <div style="display: flex;justify-content: space-between;">
                                             <b>Receipt No. ` + receipt_details['ReceiptNo'] + `</b>
-                                            <!-- <span>App ID: <strong>`+ receipt_details['AppID'] + `</strong></span> -->
+                                            <span>App ID: <strong>`+ receipt_details['AppID'] + `</strong></span>
                                             <span>Date: <strong>` + receipt_details['ReceiptDate'] + `</strong></span>
                                         </div>
                                     </div>
