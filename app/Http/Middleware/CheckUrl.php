@@ -38,17 +38,20 @@ class CheckUrl
             // dd($server);
             DB::disconnect();
             if($server){
-                config::set(['database.connections.mysql' => [
+                if($server['dbhost']=='localhost'){$host='localhost';}elseif(env('APP_ENV')=="local"){$host='217.21.80.2';}else{ $host='localhost';}
+                $datadb = [
                     'driver'    => 'mysql',
-                    'host'      => env('APP_ENV')=="local"?'217.21.80.2':"localhost",//$server['dbhost'],
+                    'host'      => $host,
                     'database'  => $server['dbname'],
                     'username'  => $server['dbuser'],
-                    'password'  => 'Skooliya@123',
+                    'password'  => ($server['dbhost']=='localhost')?'':'Skooliya@123',
                     'charset'   => 'utf8',
                     'collation' => 'utf8_unicode_ci',
                     'prefix'    => '',
                     'strict'    => false,
-                ]]);
+                ];
+                // dd([$datadb,$server]);
+                config::set(['database.connections.mysql' => $datadb]);
                 Session::put('server',$server);
                 return $next($request);
             }else{

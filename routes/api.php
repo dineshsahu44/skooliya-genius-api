@@ -29,6 +29,7 @@ use App\Http\Controllers\OfflineApiController;
 Route::any('/', function(){
     return view('welcome');
 });
+
 Route::any('/autoattendance', [StaticController::class,'autoAttendance']);
 Route::any('/hw/gsdt', [StaticController::class,'setEpt']);
 Route::get('/takeatour.php', [StaticController::class,'takeATour']);
@@ -36,6 +37,10 @@ Route::get('/takeatour.php', [StaticController::class,'takeATour']);
 Route::middleware('checkurl')->group(function(){
     Route::post('/loginapi.php', [AuthController::class,'login']);
     Route::post('/tokenhandleapi.php', [AuthController::class,'tokenHandleApi']);
+    Route::any('/fee-day-book',[FeesController::class,'feesDayBook']);
+    Route::any('/fees-details',[FeesController::class,'feesDetails']);
+    Route::get('/studentfeecard.php',[FeesController::class,'studentFeeCard']);
+    
     Route::group(['middleware' => 'auth.verify'], function(){
         Route::post('/checkuspassapi.php', [AuthController::class,'checkUsPass']);
         Route::post('/changepasswordapi.php', [AuthController::class,'changePassword']);
@@ -94,6 +99,9 @@ Route::middleware('checkurl')->group(function(){
         Route::post('/comment/comment.php', [CommentController::class,'comments']);
         Route::post('/deleteapi.php', [DeleteController::class,'deleteRecord']);
         Route::get('/msgsendtoapi.php', [NotificationController::class,'msgSendToRecord']);
+        
+
+        // Route::get('/fee-day-book',[FeesController::class,'feesDayBook']);
 
         Route::get('/studentreportcard.php',function(){
             return "Coming Soon";

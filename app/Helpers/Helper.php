@@ -5,7 +5,11 @@ use App\Models\SchoolSession;
 use App\Models\Registration;
 use App\Models\Faculty;
 use App\Models\User;
+use App\Models\Classes;
+use App\Models\Section;
+// use DB;
 use Carbon\Carbon;
+
 // use Log;
 
     function customResponse($type, $data=null){
@@ -637,6 +641,22 @@ use Carbon\Carbon;
                     "accounttype"=> "teacher",
                     "activityname"=> "Leave Request",
                 ],
+                [
+                    "optionname"=> "Fee Day Book",
+                    "iconurl"=> "https://api.skooliya.com/images/Signing-A-Document.png",
+                    "color"=> "#6dc9ff",
+                    "redirecturl"=> "https://api.skooliya.com/api/fee-day-book?role=staff&apptype=faculty",
+                    "accounttype"=> "teacher",
+                    "activityname"=>  "Fee Day Book",
+                ],
+                [
+                    "optionname"=> "Fees Details",
+                    "iconurl"=> "https://api.skooliya.com/images/document-sign.png",
+                    "color"=> "#ffabab",
+                    "redirecturl"=> "https://api.skooliya.com/api/fees-details?role=staff&apptype=faculty",
+                    "accounttype"=> "teacher",
+                    "activityname"=>  "Fees Details",
+                ],
             ],
             "admin"=>[
                 [
@@ -650,14 +670,95 @@ use Carbon\Carbon;
                 [
                     "optionname"=> "Approve Leave",
                     "iconurl"=> "https://icons.veryicon.com/png/o/business/personnel-icon/leave-request-2.png",
-                    "color"=> "#9b50a0",
+                    "color"=> "#00a65a",
                     "redirecturl"=> "https://web.skooliya.com/Leaves/approveleave?role=staff&apptype=faculty",
                     "accounttype"=> "admin",
                     "activityname"=> "Approve Leave",
                 ],
+                [
+                    "optionname"=> "Fee Day Book",
+                    "iconurl"=> "https://api.skooliya.com/images/Signing-A-Document.png",
+                    "color"=> "#6dc9ff",
+                    "redirecturl"=> "https://api.skooliya.com/api/fee-day-book?role=staff&apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=>  "Fee Day Book",
+                ],
+                [
+                    "optionname"=> "Fees Details",
+                    "iconurl"=> "https://api.skooliya.com/images/document-sign.png",
+                    "color"=> "#ffabab",
+                    "redirecturl"=> "https://api.skooliya.com/api/fees-details?role=staff&apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=>  "Fees Details",
+                ],
             ]
         ];
         return @$mainscreen[$accounttype];
+    }
+
+    
+    function getIndianCurrency(float $number)
+    {
+        $decimal = round($number - ($no = floor($number)), 2) * 100;
+        $hundred = null;
+        $digits_length = strlen($no);
+        $i = 0;
+        $str = array();
+        $words = array(0 => '', 1 => 'one', 2 => 'two',
+            3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six',
+            7 => 'seven', 8 => 'eight', 9 => 'nine',
+            10 => 'ten', 11 => 'eleven', 12 => 'twelve',
+            13 => 'thirteen', 14 => 'fourteen', 15 => 'fifteen',
+            16 => 'sixteen', 17 => 'seventeen', 18 => 'eighteen',
+            19 => 'nineteen', 20 => 'twenty', 30 => 'thirty',
+            40 => 'forty', 50 => 'fifty', 60 => 'sixty',
+            70 => 'seventy', 80 => 'eighty', 90 => 'ninety');
+        $digits = array('', 'hundred','thousand','lakh', 'crore');
+        while( $i < $digits_length ) {
+            $divider = ($i == 2) ? 10 : 100;
+            $number = floor($no % $divider);
+            $no = floor($no / $divider);
+            $i += $divider == 10 ? 1 : 2;
+            if ($number) {
+                $plural = (($counter = count($str)) && $number > 9) ? 's' : null;
+                $hundred = ($counter == 1 && $str[0]) ? ' and ' : null;
+                $str [] = ($number < 21) ? $words[$number].' '. $digits[$counter]. $plural.' '.$hundred:$words[floor($number / 10) * 10].' '.$words[$number % 10]. ' '.$digits[$counter].$plural.' '.$hundred;
+            } else $str[] = null;
+        }
+        $Rupees = implode('', array_reverse($str));
+        $paise = ($decimal > 0) ? "." . ($words[$decimal / 10] . " " . $words[$decimal % 10]) . ' Paise' : '';
+        return ($Rupees ? $Rupees . 'Rupees ' : '') . $paise;
+    }
+
+    function selectedSessionClasses($school_id){
+        $classes = Classes::where('school_id', $school_id)->pluck('class', 'id')->toArray();
+        return $classes;
+    }
+
+    function selectedSessionSection($school_id, $onlySection = null){
+        $sections = Section::select(DB::raw('CONCAT(\'[\', GROUP_CONCAT(JSON_OBJECT(\'id\', id, \'section\', section)), \']\') AS section_list, class_id'))
+            ->where('school_id', $school_id)
+            ->groupBy('class_id')->get();
+    
+        $list_section = [];
+        
+        foreach ($sections as $s) {
+            $sectionData = json_decode($s->section_list, true);
+    
+            if ($onlySection != null && $onlySection == 'onlysection') {
+                foreach ($sectionData as $sec) {
+                    $list_section[] = $sec['section'];
+                }
+            } else {
+                $list_section[$s->class_id] = $sectionData;
+            }
+        }
+    
+        if ($onlySection != null && $onlySection == 'onlysection') {
+            $list_section = array_unique($list_section);
+        }
+    
+        return $list_section;
     }
 /*
     function schoolStatus(){
