@@ -304,7 +304,7 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="row" style="max-height: 100vh;overflow: auto;">
             <div class="col-md-12">
                 <ul class="custom-list" id="fee-day-book-list">
                 </ul>
