@@ -15,6 +15,7 @@ use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DeleteController;
 use App\Http\Controllers\OfflineApiController;
+use App\Http\Controllers\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +41,7 @@ Route::middleware('checkurl')->group(function(){
     Route::any('/fee-day-book',[FeesController::class,'feesDayBook']);
     Route::any('/fees-details',[FeesController::class,'feesDetails']);
     Route::get('/studentfeecard.php',[FeesController::class,'studentFeeCard']);
-    
+    Route::any('machine-attendance',[AttendanceController::class,'machineAttendance']);
     Route::group(['middleware' => 'auth.verify'], function(){
         Route::post('/checkuspassapi.php', [AuthController::class,'checkUsPass']);
         Route::post('/changepasswordapi.php', [AuthController::class,'changePassword']);

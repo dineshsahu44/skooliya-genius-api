@@ -7,6 +7,8 @@ use App\Models\Faculty;
 use App\Models\User;
 use App\Models\Classes;
 use App\Models\Section;
+use App\Models\HwMessage;
+use App\Models\HwMessageFor;
 // use DB;
 use Carbon\Carbon;
 
@@ -45,8 +47,9 @@ use Carbon\Carbon;
         return $temp==''?null:$temp;
     }
 
-    function currentSession(){
-        return SchoolSession::where([['school_id',getAuth()->school_id],['status','Active']])->first();
+    function currentSession($school_id=null){
+        $school_id = $school_id==null?getAuth()->school_id:$school_id;
+        return SchoolSession::where([['school_id',$school_id],['status','Active']])->first();
     }
 
     function getSchoolIdBySessionID($sessionId){
@@ -186,7 +189,9 @@ use Carbon\Carbon;
             //session_write_close(); //close the session
             // ignore_user_abort(true); //Prevent echo, print, and flush from killing the script
             // fastcgi_finish_request(); //this returns 200 to the user, and processing continues
-            litespeed_finish_request();//use this for litespeed php this returns 200 to the user, and processing continues
+            if(function_exists('litespeed_finish_request')){
+                litespeed_finish_request();//use this for litespeed php this returns 200 to the user, and processing continues
+            }
 
             $filteredRecord = Arr::where($record, function ($value, $key) {
                 return !empty($value['token'])&& $value['token']!= null;
@@ -230,6 +235,77 @@ use Carbon\Carbon;
             }
         }catch(\Exception $e){
             return exceptionResponse($e);
+        }
+    }
+
+    function handle_notification_sms($data,$currentSession){
+        try{
+            foreach($data['jsondata'] as $r){
+                $msg = [
+                    'msgtype'=>$r['msgtype'],
+                    'msgheading'=>$r['msgheading'],
+                    'msgbody'=>$r['SmsContent'],
+                    // 'attachment'=>$attachment,
+                    'postedbyid'=>$data['postedbyid'],
+                    'postedby'=>$data['postedby'],
+                    'companyid'=>$currentSession->id,
+                    'commentstatus'=>$data['commentstatus'],
+                    'entrydate'=>now(),
+                ];
+                $HwMessage = HwMessage::create($msg);
+                // dd($HwMessage);
+                if($HwMessage->id){
+                    $messagefor = [
+                        'studentid'=>$r['AccountID'],
+                        'msgid'=>$HwMessage->id
+                    ];
+                    HwMessageFor::create($messagefor);
+                }
+                // dd([!empty($r['notificationtoken'])&&($r['FcmFlag']==1),$r]);
+                
+                if(!empty($r['notificationtoken'])&&($r['FcmFlag']==1)){
+                    $record[] = [
+                        "username"=>$r['AccountID'],
+                        "token"=>$r['notificationtoken'],
+                    ];
+                    // send_notification($body,$title,$notificationtype,$record)
+                    send_notification($r['SmsContent'],$r['msgheading'],"Notice",$record);
+                    $fcmStatus = 1;
+                }else{
+                    $fcmStatus = 0;
+                }
+                
+                // $url = '';
+                // if($r['SmsFlag']==1){
+                //     if (filter_var(smspart1, FILTER_VALIDATE_URL)&&(smspart2!=""&&smspart2!=null)&&(smspart3!=""&&smspart3!=null)) {
+                //         if(strlen($r['ContactNo'])==10&&is_numeric($r['ContactNo'])&&$r['Result']=="Sent"){
+                //                     // var url = smspart1+contactno+smspart2+smscontent+smspart3+DLT_TE_ID;
+                //             $msg = urlencode($r['SmsContent']);
+                //             $url = smspart1.$r['ContactNo'].smspart2.$msg.smspart3.$r['Dlt_Tem_Id'];
+                //             $result = call_send_sms($url); 
+                //             $smsStatus = 1;
+                //         }else{
+                //             $result = $r['Result'];
+                //             $smsStatus = 0;
+                //         }
+                //     }else{
+                //         $result = $r['Result'];
+                //         $smsStatus = 0;
+                //     }
+                // }else{
+                //     $result = $r['Result'];
+                //     $smsStatus = 0;
+                // }
+                
+                // $sql = "INSERT INTO `smslog`(`Name`, `AccountID`, `SendFor`, `EntryDate`, `Time`, `ContactNo`, `SmsContent`, `Result`, `SendBy`, `SendByAccountID`,`PageFrom`, `SmsStatus`,`FcmStatus`, `SmsUrl`) VALUES ('".$jsondata['Name']."','".$jsondata['AccountID']."','".$jsondata['SendFor']."','".$jsondata['EntryDate']."','".$jsondata['Time']."','".$jsondata['ContactNo']."','".urlencode($jsondata['SmsContent'])."','".$result."','".$data['postedby']."','".$data['postedbyid']."','".$data['pagefrom']."','".$smsStatus."','".$fcmStatus."','".$url."')";
+        
+                // $stmt = $conn->prepare($sql);
+                // $stmt->execute();
+                // $stmt->close();
+            }
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+            // Log::info('Machine Attendance school->'.$request->servername, ['for'=>'attendance insertion done send to fcm notification.','data'=>$data1]);
         }
     }
 

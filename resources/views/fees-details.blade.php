@@ -367,9 +367,9 @@
                                         <div>`+properCase(ph['FatherName'])+`</div>
                                     </div>
                                     <div class="justify-between" style="padding: 2px 0px 2px 0px;">
-                                        <div style="color: #008502;">₹`+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(totalpaidsum))+`</div>
-                                        <div style="color: #f75c5c;">₹`+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(ph['tillDue']))+`</div>
-                                        <div style="color: #c50000;font-weight: 800;">₹`+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(ph['totalDue']))+`</div>
+                                        <div style="color: #008502;">`+(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalpaidsum))+`</div>
+                                        <div style="color: #f75c5c;">`+(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(ph['tillDue']))+`</div>
+                                        <div style="color: #c50000;font-weight: 800;">`+(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(ph['totalDue']))+`</div>
                                     </div>
                                 </div>
                             </li>`;
@@ -377,9 +377,9 @@
                         tillDue += ph['tillDue'];
                         totalDue += ph['totalDue'];
                     });
-                    $('#total-collection').text("₹"+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(total_paid_amount)));
-                    $('#till-due').text("₹"+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(tillDue)));
-                    $('#total-due').text("₹"+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(totalDue)));
+                    $('#total-collection').text(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total_paid_amount));
+                    $('#till-due').text(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(tillDue));
+                    $('#total-due').text(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalDue));
                     $('#fee-day-book-list').html(list);
                     $('.success-list-custom').on('click', function(){
                         console.log(window.location,window.location.origin,window.location.search);

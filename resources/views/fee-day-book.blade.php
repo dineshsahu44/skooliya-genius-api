@@ -329,13 +329,15 @@
                                     <div class="text-muted justify-between f-s-15">
                                         <div>`+ph['ReceiptDate']+`</div>
                                         <div>`+ph['Class']+` - `+ph['Section']+`</div>
-                                        <div>₹`+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(ph['paid_amount']))+`</div>
+                                        <div>`+(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(ph['paid_amount']))+`</div>
                                     </div>
                                 </div>
                             </li>`;
                         total_paid_amount +=ph['paid_amount'];
+                        // console.log(ph['paid_amount'],total_paid_amount);
                     });
-                    $('#total-collection').text("₹"+(new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(total_paid_amount)));
+                    // console.log(total_paid_amount);
+                    $('#total-collection').text(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total_paid_amount));
                     $('#fee-day-book-list').html(list);
                     $('.success-list').on('click', function(){
                         var fees_details = $(this).data('fees-details');
