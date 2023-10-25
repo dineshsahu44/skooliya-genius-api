@@ -382,7 +382,7 @@
                     $('#total-due').text(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalDue));
                     $('#fee-day-book-list').html(list);
                     $('.success-list-custom').on('click', function(){
-                        console.log(window.location,window.location.origin,window.location.search);
+                        // console.log(window.location,window.location.origin,window.location.search);
                         var origin = window.location.origin;
                         var path = "/api/studentfeecard.php";
                         var variables = window.location.search;
@@ -577,9 +577,9 @@
                 "yy": yy
             };
         }
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
-            "October", "November", "December"
-        ];
+        // const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+        //     "October", "November", "December"
+        // ];
 
     </script>
 </body>

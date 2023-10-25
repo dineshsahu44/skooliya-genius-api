@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImportDatabaseController;
+use App\Http\Controllers\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,3 +66,4 @@ Route::middleware('checkdatabase')->group(function(){
 //     return view('excel-test1');
 // });
 Route::get('logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
+Route::any('/parse-log', [AttendanceController::class,'logtojson']);

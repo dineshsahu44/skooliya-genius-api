@@ -282,7 +282,11 @@ class FeesController extends Controller
                 $join->on('student_fee_details.re_id', '=', 'registrations.id')
                      ->where('student_fee_details.visibility', '=', 0);
             })
-            ->leftJoin('fee_transections AS FT', 'FT.transection_id', '=', 'student_fee_details.transection_id')
+            ->leftJoin('fee_transections AS FT', function ($join) {
+                $join->on('FT.transection_id', '=', 'student_fee_details.transection_id')
+                     ->where('FT.status', '=', 'Final');
+            })
+            // ->leftJoin('fee_transections AS FT', 'FT.transection_id', '=', 'student_fee_details.transection_id')
             ->leftJoin('heads AS Head', 'student_fee_details.head_id', '=', 'Head.id')
             ->join('guardians AS G', 'registrations.id', '=', 'G.re_id')
             ->join('classes AS C', 'registrations.class', '=', 'C.id')

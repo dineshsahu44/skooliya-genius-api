@@ -311,7 +311,7 @@
 					// $.LoadingOverlay("hide");
 				},
 				success: function(data) {
-                    console.log(data);
+                    // console.log(data);
                     // var payment=0;
                     var total_paid_amount = 0;
                     var list = '';
@@ -654,9 +654,9 @@
                 "yy": yy
             };
         }
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
-            "October", "November", "December"
-        ];
+        // const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+        //     "October", "November", "December"
+        // ];
 
     </script>
 </body>
