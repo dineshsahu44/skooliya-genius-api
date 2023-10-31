@@ -219,15 +219,19 @@
         $(sectionid).children('option').remove();
         $(sectionid).append(new Option("Select Section", "")).change();
         // alert($(classid).val());
-        if($(classid).val()!=''){
+        if($(classid).val()!='' && $(classid).val()!='All'){
             // console.log(allclasswithsection.find( record => record.class === $(classid).val()))
             $.each(allclasswithsection.find( record => record.class === $(classid).val()).section, function(i, sec) {
+                
                 if(i==0){
                     $(sectionid).append(new Option('All', 'All')).change();
                 }
                 // $(sectionid).append(new Option(properCase(sec), sec)).change();
                 $(sectionid).append(new Option(sec, sec)).change();
+            
             });
+        }else if($(classid).val()=='All'){
+            $(sectionid).append(new Option('All', 'All')).change();
         }
     }
 </script>
@@ -263,10 +267,17 @@
                     </span>
                 </div>
             </div> -->
+            <!-- <div class="row">
+                <div class="col-xs-12">
+                    <label class="mb-0"><input type="checkbox" name="active_student" style="margin: 0px;margin-right: 3px;" checked="">Active Student</label>
+                    <label class="mb-0"><input type="checkbox" name="discontinued_student" style="margin: 0px;margin-right: 3px;">Discontinued</label>
+                </div>
+            </div> -->
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-6">
                     <select id="class" name="class" class="form-control"  onchange="setSection('class','section','{{json_encode($assigned_class['permittedclass'])}}')" required>
                         <option value="" selected>Select Class</option>
+                        <option value="All">All</option>
                         @foreach($assigned_class['permittedclass'] as $class)
                             <option value="{{ $class['class'] }}">{{ $class['class'] }}</option>
                         @endforeach
@@ -354,7 +365,7 @@
                         var totalpaidsum = 0;
                         tpaid = ph['totalPaid']===null?'[]':ph['totalPaid'];
                         totalpaidsum = JSON.parse(tpaid).reduce((acc, cur) => acc + cur.paid_amount, 0);
-                        list += `<li class="special-list success-list-custom"
+                        list += `<li class="special-list success-list-custom" style='`+(ph['status']!='Active'?'background-color: red;':'')+`'
                             data-companyid='`+ph['session']+`'
                             data-studentid='`+ph['AppID']+`'>
                                 <div class="circle-badge-custom">`+(k+1)+`</div>

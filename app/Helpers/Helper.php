@@ -767,6 +767,14 @@ use Carbon\Carbon;
                     "accounttype"=> "admin",
                     "activityname"=>  "Fees Details",
                 ],
+                [
+                    "optionname"=> "Staff Attendance",
+                    "iconurl"=> "https://api.skooliya.com/images/staff-attendance.png",
+                    "color"=> "#3c8dbc",
+                    "redirecturl"=> "https://api.skooliya.com/api/faculty-attendace?apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=>  "Staff Attendance",
+                ],
             ]
         ];
         return @$mainscreen[$accounttype];

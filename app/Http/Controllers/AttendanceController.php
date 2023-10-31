@@ -23,6 +23,47 @@ use App\Http\Controllers\LogController;
 
 class AttendanceController extends Controller
 {
+    public function facultyAttendace(Request $request){
+        try{
+            if($request->isMethod('get')) {
+                return view("faculty-attendance");
+            }elseif($request->isMethod('post')) {
+                // $date = $request->from_date;
+                $companyid = $request->companyid;
+                $from_date = Carbon::createFromFormat('d-m-Y', $request->from_date)->format('Y-m-d');
+
+                $facultyAttendances = Faculty::selectRaw('
+                    faculties.name,faculties.faculty_id,
+                    IF(fa.att_status IS NOT NULL, fa.att_status, "NA") as att_status,
+                    GROUP_CONCAT(TIME_FORMAT(att_time, "%h:%i %p") ORDER BY att_time ASC SEPARATOR ", ") AS attendance_record,
+                    if(att_time is not null,TIME_FORMAT(MIN(att_time), "%h:%i %p"),"") AS inTime,
+                    if(count(att_time)>1,TIME_FORMAT(MAX(att_time), "%h:%i %p"),"") AS outTime,
+                    remark
+                ')
+                ->leftJoin('faculty_attendances as fa', function($join) use ($companyid,$from_date) {
+                    $join->on('fa.faculty_id', '=', 'faculties.id')
+                        ->where('fa.session_id', '=', $companyid)
+                        ->where(DB::raw('date(fa.att_date)'), '=', $from_date);
+                })
+                ->join('school_sessions','school_sessions.school_id','faculties.school_id')
+                ->where([['school_sessions.id', $companyid],['faculties.status','Active']])
+                ->whereNotIn('faculties.faculty_id', [1, 2, 3])
+                ->groupBy('faculties.faculty_id')
+                ->get();
+                // return $facultyAttendances;
+                $holidays = Holiday::select('name as reason','h_date as entrydate')
+                ->where([['session_id',$companyid],['h_date',$from_date]])
+                // ->whereRaw("MONTH(h_date)=$month AND YEAR(h_date)=$year")
+                ->orderBy('h_date')->first();
+                $result['attendancelist'] = $facultyAttendances;
+                $result['holidaylist']=$holidays;
+                return customResponse(1,$result);
+            }
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+        }
+    }
+
     public function machineAttendance(Request $request){
         try{
             $request->school_id = $request->schoolid;
@@ -226,6 +267,16 @@ class AttendanceController extends Controller
         $twoCharacterCode = @$fields[6];
         $rfid = @$fields[7];
 
+        if($rfid==null){
+            // $mac = @$fields[1];
+            $time = @$fields[1];
+            $date = @$fields[2];
+            // $alphanumericCode = @$fields[4];
+            // $numericalIdentifier = @$fields[5];
+            // $twoCharacterCode = @$fields[6];
+            $rfid = @$fields[6];
+        }
+        
         // Return the formatted data
         return [
             // 'mac' => $mac,

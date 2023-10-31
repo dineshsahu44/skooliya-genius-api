@@ -70,17 +70,68 @@
         .special-list {
             margin-bottom: 10px;
             /* padding: 10px 15px; */
-            padding: 10px 15px 10px 4px;            
+            padding: 10px 15px 10px 4px;
             line-height: 35px;
             border: 2px solid #d5d5d5;
             border-radius: 5px;
             font-size: 18px;
             font-weight: 600;
             box-shadow: rgba(0, 0, 0, 0.2) 10px 10px 20px -12px;
+            display: flex;
+            align-items: center;
         }
 
-        .success-list {
-            background-color: #17ff4947;
+        .present-attendance{
+            background-color: #17b9315e;
+        }
+
+        .absent-attendance{
+            background-color: #ff000063;
+        }
+
+        .leave-attendance{
+            background-color: #3498db5c;
+        }
+
+        .na-attendance{
+            background-color: #adadad5e;
+        }
+
+        .holiday-attendance{
+            background-color: #ffdb92;
+            /* background-color: #ffd187; */
+        }
+        
+        .in-time{
+            color: #008502;
+        }
+
+        .out-time{
+            color: #c50000;
+            font-weight: 800;
+        }
+
+        .leave-comment{
+            color: #00447f;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 240px;
+        }
+
+        .holiday-comment{
+            color: #d98500;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 240px;
+        }
+
+        /* success list background changedfor this page */
+        .success-list-custom {
+            background-color: #ffdb92;
             display: flex;
             align-items: center;
         }
@@ -91,17 +142,19 @@
             align-items: center;
         }
 
-        .circle-badge {
+        /* circle badge changed for this page */
+        .circle-badge-custom {
             margin-right: 15px;
             margin-left: 3px;
-            width: 35px;
-            height: 35px;
-            line-height: 35px;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
             border-radius: 50%;
             color: #fff;
             text-align: center;
             background: #f39c12;
             font-weight: 600;
+            font-size: 20px;
         }
 
         .flex-row {
@@ -126,6 +179,9 @@
         .f-s-17 {
             font-size: 17px;
         }
+        .f-s-18 {
+            font-size: 18px;
+        }
 
         .f-s-25 {
             font-size: 25px;
@@ -141,7 +197,21 @@
 
         .total-due-panel {
             padding: 5px;
-            background-color: #E8ECEB;
+            background-color: #ffabab;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .till-due-panel {
+            padding: 5px;
+            background-color: #ff8787;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .attendance-panel {
+            padding: 5px;
+            background-color: #f1f1f1;
             border-radius: 5px;
             text-align: center;
             margin-bottom: 10px;
@@ -167,7 +237,11 @@
             font-weight: 600; 
             z-index: 7;
         }
-
+        .span-att {
+            border-left: 2px solid #7c7c7c;
+            margin-left: 3px;
+            padding-left: 3px;
+        }
     </style>
     <link rel="stylesheet" type="text/css"
         href="https://adminlte.io/themes/AdminLTE/bower_components/bootstrap/dist/css/bootstrap.min.css">
@@ -221,9 +295,9 @@
     <section class="content">
         <form action="#" method="post" id="fee_day_book_form">
             <div class="row" style="margin-bottom: 10px;">
-                <div class="col-xs-6">
+                <div class="col-xs-12">
                     <span class="block input-icon input-icon-right">
-                        <div class="title-overlap">From Date <span class="text-danger font-weight-bold">*</span>
+                        <div class="title-overlap">Date <span class="text-danger font-weight-bold">*</span>
                         </div>
                         <div class="input-group date">
                             <input type="text" class="form-control date-input-header datepicker" name="from_date" placeholder="dd-mm-yyyy" id="from_date" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask required>
@@ -233,35 +307,6 @@
                         </div>
                     </span>
                 </div>
-                <div class="col-xs-6">
-                    <span class="block input-icon input-icon-right">
-                        <div class="title-overlap">To Date <span class="text-danger font-weight-bold">*</span>
-                        </div>
-                        <span role="status" aria-live="polite" class="ui-helper-hidden-accessible"></span>
-                        <div class="input-group date">
-                            <input type="text" class="form-control date-input-header datepicker" name="to_date" placeholder="dd-mm-yyyy" id="to_date" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask required>
-                            <div class="input-group-addon" style="border-color: #000000;">
-                                <i class="fa fa-calendar"></i>
-                            </div>
-                        </div>
-                    </span>
-                </div>
-            </div>
-            <div class="row" style="margin-bottom: 10px;">
-                <div class="col-xs-6">
-                    <select id="class" name="class" class="form-control"  onchange="setSection('class','section','{{json_encode($assigned_class['permittedclass'])}}')" required>
-                        <option value="" selected>Select Class</option>
-                        <option value="All">All</option>
-                        @foreach($assigned_class['permittedclass'] as $class)
-                            <option value="{{ $class['class'] }}">{{ $class['class'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-xs-6">
-                    <select id="section" name="section" class="form-control" required>
-                        <option value="" selected disabled>Select Section</option>
-                    </select>
-                </div>
             </div>
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-12">
@@ -270,16 +315,20 @@
             </div>
         </form>
         <div class="row">
-            <div class="col-md-12">
-                <div class="total-due-panel">
-                    <div class="f-s-17 f-w-5">Total Collection</div>
-                    <div class="f-s-25 f-w-6" id="total-collection">₹0</div>
+            <div class="col-xs-12">
+                <div class="attendance-panel">
+                    <div class="f-s-18 f-w-6" id="attendace-count">
+                        <span id="present-count" style="color:#17b999;">Present- 0</span>
+                        <span id="absent-count" class="span-att" style="color:#ec7063;">Absent- 0</span>
+                        <span id="leave-count" class="span-att" style="color:#3498db;">Leave- 0</span>
+                        <span id="na-count" class="span-att">NA- 0</span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="row" style="max-height: 100vh;overflow: auto;">
             <div class="col-md-12">
-                <ul class="custom-list" id="fee-day-book-list">
+                <ul class="custom-list" id="faculty-attendance-list">
                 </ul>
             </div>
         </div>
@@ -310,170 +359,93 @@
 				data: $(this).serialize(),
 				dataType: 'json',
 				beforeSend: function (xhr) {
-                    xhr.setRequestHeader('Authorization', "{{$auth_token}}");
+                    xhr.setRequestHeader('Authorization', "{{--$auth_token--}}");
                 },
 				complete: function(data) {
 					// $.LoadingOverlay("hide");
 				},
 				success: function(data) {
-                    // console.log(data);
-                    // var payment=0;
-                    var total_paid_amount = 0;
+                    var total_present=0;
+                    var total_absent = 0;
+                    var total_leave = 0;
+                    var total_na = 0;
                     var list = '';
-                    $.each(data,function(k,ph){
-                        list += `<li class="special-list success-list"
-                            data-amount-in-word="`+properCase(getIndianCurrency(ph['paid_amount']))+`"
-                            data-receipt-details='`+JSON.stringify(ph)+`'
-                            data-fees-details='`+ph["object"]+`'>
-                                <div class="circle-badge">`+(k+1)+`</div>
+
+                    $.each(data['attendancelist'],function(k,ph){
+                        listType = {"P":"present-attendance","A":"absent-attendance","L":"leave-attendance","H":"holiday-attendance","NA":"na-attendance",};
+                        commentType = {"L":"leave-comment","H":"holiday-comment"};
+                        
+                        att_record = JSON.stringify(ph);
+                        attendanceStatus = ph['att_status'];
+                        remark = (ph['remark']!=null?ph['remark']:'');
+
+                        switch (attendanceStatus) {
+                            case "P":
+                                total_present++;
+                                break;
+                            case "A":
+                                total_absent++;
+                                break;
+                            case "L":
+                                total_leave++;
+                                break;
+                            case "NA":
+                                total_na++;
+                                break;
+                        }
+
+                        div_For_Holi_Leave = `<div class="justify-between" style="padding: 2px 0px 2px 0px;">
+                            <div class="`+(attendanceStatus=='L'?'leave-comment':'')+`">`+properCase(remark)+`</div>
+                        </div>`;
+
+                        div_for_inout_time = `<div class="justify-between" style="padding: 2px 0px 2px 0px;">
+                            <div class="in-time">`+ph['inTime']+`</div>
+                            <div class="out-time">`+ph['outTime']+`</div>
+                        </div>`;
+
+                        list += `<li class="special-list `+(listType[attendanceStatus])+`"
+                            data-attstatus='`+attendanceStatus+`'
+                            data-attrecord='`+att_record+`'>
+                                <div class="circle-badge-custom">`+(k+1)+`</div>
                                 <div class="flex-row">
-                                    <div class="justify-between">
-                                        <div>`+ph['ReceiptNo']+`</div>
-                                        <div>`+properCase(ph['StudentName'])+`</div>
+                                    <div class="justify-between" style="padding: 2px 0px 2px 0px;">
+                                        <div>`+properCase((ph['name']!=null?ph['name']:''))+`</div>
+                                        <div>`+ph['faculty_id']+`</div>
                                     </div>
-                                    <div class="text-muted justify-between f-s-15">
-                                        <div>`+ph['ReceiptDate']+`</div>
-                                        <div>`+ph['Class']+` - `+ph['Section']+`</div>
-                                        <div>`+(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(ph['paid_amount']))+`</div>
-                                    </div>
+                                    `+(div_For_Holi_Leave)+`
+                                    `+(div_for_inout_time)+`
                                 </div>
                             </li>`;
-                        total_paid_amount +=ph['paid_amount'];
-                        // console.log(ph['paid_amount'],total_paid_amount);
                     });
-                    // console.log(total_paid_amount);
-                    $('#total-collection').text(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total_paid_amount));
-                    $('#fee-day-book-list').html(list);
-                    $('.success-list').on('click', function(){
-                        var fees_details = $(this).data('fees-details');
-                        var receipt_details = $(this).data('receipt-details');
-                        if (fees_details) {
-                            var amount_in_word = $(this).data('amount-in-word');
-                            var tbody = '';
-                            const groupedData = {};
-                            $.each(fees_details, function (index, item) {
-                                const fhead = item.fhead;
-                                const defultAmount = item.defult_amount;
-
-                                if (!groupedData[fhead]) {
-                                    groupedData[fhead] = {
-                                        fhead: fhead,
-                                        total_defult_amount: 0,
-                                        items: []
-                                    };
-                                }
-
-                                groupedData[fhead].total_defult_amount += defultAmount;
-                                groupedData[fhead].items.push(item);
-                            });
-
-                            const groupedArray = Object.values(groupedData);
-                            // console.log(groupedArray);
-
-                            $.each(groupedArray, function (key, fees) {
-                                tbody += '<tr><td>' + (key + 1) + '</td><td>' + fees['fhead'] +
-                                    '</td><td style="text-align: right;">₹' +
-                                    fees['total_defult_amount'] + '</td></tr>';
-                            })
-
-                            var printReceipt = `
-                                <section class="invoice" style="padding: 0;margin: 0;">
-                                    <div class="row">
-                                        <div class="col-xs-12">
-                                            <div class="row" style="border-bottom: 2px solid;margin-bottom: 5px; margin-right: 0px;">
-                                                <!-- <div class="col-xs-2">
-                                                    <img width="80" height="80" alt="School Logo" src="logo" onerror="this.onerror=null; this.src='base.'/img/altlogo.png';?>'">
-                                                </div> -->
-                                                <div class="col-xs-12 text-center">
-                                                    
-                                                </div>
-                                            </div>
-                                            <div class="row" style="border-bottom: 2px outset;margin-right: 0px;">
-                                                <div class="col-xs-12">
-                                                    <div style="display: flex;justify-content: space-between;">
-                                                        <b>Receipt No. ` + receipt_details['ReceiptNo'] + `</b>
-                                                        <span>App ID: <strong>` + receipt_details['AppID'] + `</strong></span>
-                                                        <span>Date: <strong>` + receipt_details['ReceiptDate'] + `</strong></span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row invoice-info">
-                                                <div class="col-xs-5">
-                                                    Class: <b>` + receipt_details['Class'] + ` - ` + receipt_details['Section'] + `</b><br>
-                                                    Mobile: <b>` + receipt_details['mobile'] + `</b>
-                                                </div>
-                                                <div class="col-xs-7">
-                                                    Name: <b>` + receipt_details['StudentName'] + `</b><br>
-                                                    Father: <b>` + receipt_details['FatherName'] + `</b>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-xs-12">
-                                                    Months:<b>` + (receipt_details['Months'] != null ? receipt_details['Months'] :
-                                    '') + `</b>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-xs-12">
-                                                    <table class="table table-striped table-condensed" style="margin-bottom: 0px;">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>SN</th>
-                                                                <th>Particulars</th>
-                                                                <th style="text-align: right;">Amount</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            ` + tbody + `
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-xs-5">
-                                                <!-- class="table table-bordered table-condensed" -->
-                                                    Deposited:<b><br>By Cash</b><br>
-                                                    Total Amount (In Words)<br>
-                                                    <b>` + amount_in_word + `</b>
-
-                                                    <!-- Remark:getIndianCurrency() --> 
-                                                </div>
-                                                <div class="col-xs-7">
-                                                    <div>
-                                                        <table class="table table-condensed">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <th style="text-align: right;">Late Fine:</th>
-                                                                    <td style="text-align: right;">+` + receipt_details['fine'] + `/-</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th style="text-align: right;">Concession:</th>
-                                                                    <td style="text-align: right;">-` + receipt_details['discount'] + `/-</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th style="text-align: right;">Total:</th>
-                                                                    <td style="text-align: right;font-size: 17px;">` +receipt_details['default_amount'] + `/-</td>
-                                                                </tr>
-                                                                <tr style="color:green;">
-                                                                    <th style="text-align: right;">Paid Amount:</th>
-                                                                    <th style="text-align: right;font-size: 18px;">` +receipt_details['paid_amount'] + `/-</tH>
-                                                                </tr>
-                                                                <tr style="color:red;">
-                                                                    <th style="text-align: right;">Balance:</th>
-                                                                    <td style="text-align: right;font-size: 16px;">` +receipt_details['due'] + `/-</td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>`;
+                    $('#present-count').text("Present - "+total_present);
+                    $('#absent-count').text("Absent - "+total_absent);
+                    $('#leave-count').text("Leave - "+total_leave);
+                    $('#na-count').text("NA - "+total_na);
+                    $('#faculty-attendance-list').html(list);
+                    $('.special-list').on('click', function(){
+                        // console.log(window.location,window.location.origin,window.location.search);
+                        var att_status = $(this).data('attstatus');
+                        var att_record = $(this).data('attrecord');
+                        if(att_status=='P'||att_status=='L'){
+                            var html = '';
+                            if(att_status=='P'){
+                                html = `
+                                    <h3>Present</h3>
+                                    <div>`+att_record['attendance_record']+`</div>
+                                `;
+                            }else if(att_status=='L'){
+                                html = `
+                                    <h3>Leave</h3>
+                                    <div>`+properCase(att_record['remark'])+`</div>
+                                `;
+                            }
+                            
                             var jc = $.confirm({
                                 columnClass: 'medium',
                                 title: false,
-                                content: printReceipt,
+                                scrollToPreviousElement: false, // add this line 
+                                scrollToPreviousElementAnimate: false, // add this line 
+                                content: html,
                                 buttons: {
                                     close: function () {
                                         //close

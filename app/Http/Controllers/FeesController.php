@@ -130,14 +130,14 @@ class FeesController extends Controller
                         "defult_amount", student_fee_details.defult_amount
                     )), "]") as object'),
         ])
-        ->join('student_fee_details', 'fee_transections.transection_id', '=', 'student_fee_details.transection_id')
+        ->join('student_fee_details', 'fee_transections.id', '=', 'student_fee_details.transection_id')
         ->leftJoin('heads', 'student_fee_details.head_id', '=', 'heads.id')
         ->where([
             'fee_transections.re_id' => $studentRecord->ReID,
             'fee_transections.session_id' => $companyid,
         ])
         ->where('fee_transections.status', '!=', 'Cancel')
-        ->groupBy('fee_transections.transection_id')
+        ->groupBy('fee_transections.id')
         ->orderByDesc('fee_transections.t_date')
         ->get();
         // return(\DB::getQueryLog()); 
@@ -179,11 +179,13 @@ class FeesController extends Controller
         }elseif($request->isMethod('post')) {
             $from_date = Carbon::createFromFormat('d-m-Y', $request->from_date)->format('Y-m-d');
             $to_date = Carbon::createFromFormat('d-m-Y', $request->to_date)->format('Y-m-d');
-            $class_array = [['C.class',$request->class]];
-            if($request->section!='All'){
-                $class_array[]=['S.section',$request->section];
-            }
-            
+            // $class_array = [['C.class',$request->class]];
+            // if($request->section!='All'){
+            //     $class_array[]=['S.section',$request->section];
+            // }
+
+            $sql = checkFacultyClassGetRaw($request->class,$request->section,$accountid,$companyid);
+
             $paymentHistory = StudentFeeDetail::selectRaw('
                 CONCAT("[", GROUP_CONCAT(JSON_OBJECT(
                     "fhead", (CASE WHEN student_fee_details.structure_status="T FEE" THEN "Transport Fee" WHEN student_fee_details.structure_status="DUE FEE" THEN "Old Balance" ELSE Head.head END),
@@ -206,28 +208,29 @@ class FeesController extends Controller
                 R.name as StudentName,
                 R.scholar_id as ScholarID,
                 if(G.f_name is not null,G.f_name,"") as FatherName,
-                C.class as Class,
-                S.section as Section,
+                classes.class as Class,
+                sections.section as Section,
                 PP.name as Route,
                 V.name as VehicleName,
                 R.mobile
             ')
-            ->join('fee_transections AS FT', 'FT.transection_id', '=', 'student_fee_details.transection_id')
+            ->join('fee_transections AS FT', 'FT.id', '=', 'student_fee_details.transection_id')
             ->leftJoin('heads AS Head', 'student_fee_details.head_id', '=', 'Head.id')
             ->join('registrations AS R', 'R.id', '=', 'student_fee_details.re_id')
             ->join('guardians AS G', 'R.id', '=', 'G.re_id')
-            ->join('classes AS C', 'R.class', '=', 'C.id')
-            ->join('sections AS S', 'R.section', '=', 'S.id')
+            ->join('classes', 'R.class', '=', 'classes.id')
+            ->join('sections', 'R.section', '=', 'sections.id')
             ->leftJoin('fee_groups AS FG', 'FG.id', '=', 'R.group_id')
             ->leftJoin('passengers AS P', 'P.re_id', '=', 'R.id')
             ->leftJoin('pick_points AS PP', 'PP.id', '=', 'P.pick_point_id')
             ->leftJoin('vehicles AS V', 'V.id', '=', 'P.vehicle_id')
             ->where('student_fee_details.session', '=', $companyid)
             ->where('student_fee_details.status', '=', 1)
-            ->where('student_fee_details.transection_id', '=', DB::raw('FT.transection_id'))
+            // ->where('student_fee_details.transection_id', '=', DB::raw('FT.transection_id'))
             ->where([[ DB::raw('date(FT.t_date)'), '>=', $from_date],[ DB::raw('date(FT.t_date)'), '<=', $to_date]])
-            ->where($class_array)
-            ->groupBy('FT.transection_id')
+            ->whereRaw($sql)
+            // ->where($class_array)
+            ->groupBy('FT.id')
             ->get();
             return $paymentHistory;
         }
@@ -250,10 +253,13 @@ class FeesController extends Controller
         }elseif($request->isMethod('post')) {
             // $from_date = Carbon::createFromFormat('d-m-Y', $request->from_date)->format('Y-m-d');
             // $to_date = Carbon::createFromFormat('d-m-Y', $request->to_date)->format('Y-m-d');
-            $class_array = [['C.class',$request->class]];
-            if($request->section!='All'){
-                $class_array[]=['S.section',$request->section];
-            }
+            // $class_array = [['C.class',$request->class]];
+            // if($request->section!='All'){
+            //     $class_array[]=['S.section',$request->section];
+            // }
+
+            $sql = checkFacultyClassGetRaw($request->class,$request->section,$accountid,$companyid);
+
             $current_date = Carbon::now()->format('Y-m-d');
             $paymentHistory = Registration::selectRaw('
                 CONCAT("[",
@@ -272,10 +278,11 @@ class FeesController extends Controller
                 registrations.name as StudentName,
                 registrations.scholar_id as ScholarID,
                 if(G.f_name is not null,G.f_name,"") as FatherName,
-                C.class as Class,
-                S.section as Section,
+                classes.class as Class,
+                sections.section as Section,
                 registrations.mobile,
-                registrations.session
+                registrations.session,
+                registrations.status
             ')
             // ->leftJoin('student_fee_details', 'student_fee_details.re_id', '=', 'registrations.id')
             ->leftJoin('student_fee_details', function ($join) {
@@ -283,19 +290,22 @@ class FeesController extends Controller
                      ->where('student_fee_details.visibility', '=', 0);
             })
             ->leftJoin('fee_transections AS FT', function ($join) {
-                $join->on('FT.transection_id', '=', 'student_fee_details.transection_id')
+                $join->on('FT.id', '=', 'student_fee_details.transection_id')
                      ->where('FT.status', '=', 'Final');
             })
             // ->leftJoin('fee_transections AS FT', 'FT.transection_id', '=', 'student_fee_details.transection_id')
             ->leftJoin('heads AS Head', 'student_fee_details.head_id', '=', 'Head.id')
             ->join('guardians AS G', 'registrations.id', '=', 'G.re_id')
-            ->join('classes AS C', 'registrations.class', '=', 'C.id')
-            ->join('sections AS S', 'registrations.section', '=', 'S.id')
-            ->where([['registrations.session', '=', $companyid],['registrations.status', '=', 'Active']])
+            ->join('classes', 'registrations.class', '=', 'classes.id')
+            ->join('sections', 'registrations.section', '=', 'sections.id')
+            ->where([['registrations.session', '=', $companyid],
+            // ['registrations.status', '=', 'Active']
+            ])
             // ->where('student_fee_details.status', '=', 1)
             // ->where('student_fee_details.transection_id', '=', DB::raw('FT.transection_id'))
             // ->where([[ DB::raw('date(FT.t_date)'), '>=', $from_date],[ DB::raw('date(FT.t_date)'), '<=', $to_date]])
-            ->where($class_array)
+            // ->where($class_array)
+            ->whereRaw($sql)
             ->groupBy('registrations.id')
             ->orderBy('registrations.name')
             ->get();
