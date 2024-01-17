@@ -9,7 +9,7 @@ use App\Models\Classes;
 use App\Models\Section;
 use App\Models\HwMessage;
 use App\Models\HwMessageFor;
-// use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 // use Log;
@@ -733,6 +733,14 @@ use Carbon\Carbon;
                     "accounttype"=> "teacher",
                     "activityname"=>  "Fees Details",
                 ],
+                [
+                    "optionname"=> "Marks Entry",
+                    "iconurl"=> "https://api.skooliya.com/images/Marks-Entry.png",
+                    "color"=> "#ff9b00",
+                    "redirecturl"=> "https://api.skooliya.com/api/marks-entry?apptype=faculty",
+                    "accounttype"=> "teacher",
+                    "activityname"=>  "Marks Entry",
+                ],
             ],
             "admin"=>[
                 [
@@ -774,6 +782,14 @@ use Carbon\Carbon;
                     "redirecturl"=> "https://api.skooliya.com/api/faculty-attendace?apptype=faculty",
                     "accounttype"=> "admin",
                     "activityname"=>  "Staff Attendance",
+                ],
+                [
+                    "optionname"=> "Marks Entry",
+                    "iconurl"=> "https://api.skooliya.com/images/Marks-Entry.png",
+                    "color"=> "#ff9b00",
+                    "redirecturl"=> "https://api.skooliya.com/api/marks-entry?apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=>  "Marks Entry",
                 ],
             ]
         ];
@@ -843,6 +859,55 @@ use Carbon\Carbon;
         }
     
         return $list_section;
+    }
+
+    function getMapedSubject($session_id){
+        $query = "SELECT 
+                CONCAT('{\"',
+                    subg.sec_id,'\":',
+                    CONCAT(
+                        '{\"ClassSection\":', JSON_OBJECT('Class', JSON_OBJECT('Name', subg.class, 'ID', subg.class_id), 'Section', JSON_OBJECT('Name', subg.section, 'ID', subg.sec_id)),
+                        ',\"GroupDetails\":[', GROUP_CONCAT(subg.result), ']}'
+                    ),
+                    '}'
+                ) AS finalResult
+            FROM 
+                (
+                    SELECT 
+                        CONCAT('{',
+                    '\"SubjectGroup\":', JSON_OBJECT('GroupName', sg.subject_group, 'GroupID', sg.id),
+                    ',\"Subjects\":[', GROUP_CONCAT( 
+                        CONCAT(
+                            '{','\"SubjectID\":', s.id,',', '\"SubjectName\":\"', s.subject_name,'\"'),
+                        '}'
+                        )
+                    ,']}'
+                ) AS result,
+                        sg.id AS sgid, sg.subject_group,
+                        c.id AS class_id, c.class,
+                        sec.id AS sec_id, sec.section 
+                    FROM 
+                        subject_plans sp 
+                        INNER JOIN subjects s ON s.id=sp.SubjectID 
+                        INNER JOIN subject_groups sg ON sg.id=sp.SubjectGroupID 
+                        INNER JOIN classes c ON c.id=sp.ClassID
+                        INNER JOIN sections sec ON sec.id=sp.SectionID
+                    WHERE 
+                        SessionID=$session_id
+                    GROUP BY 
+                        sp.SectionID, sp.SubjectGroupID
+                ) AS subg 
+            GROUP BY 
+                subg.sec_id
+        ";
+        $result = DB::select($query);
+        $subject = [];
+        foreach($result as $r){
+            foreach(json_decode($r->finalResult,true) as $k=>$s){
+                $subject[$k]=$s;
+            }   
+        }
+        return $subject;
     }
 /*
     function schoolStatus(){

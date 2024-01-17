@@ -55,6 +55,70 @@ class StaticController extends Controller
         }
     }
 
+    public function getAllClassesWithNumeric(Request $request){
+        try{
+            // $accountid = $_GET['accountid'];
+            // $companyid = $_GET['companyid'];
+            $validator = Validator::make($request->all(),[
+                'companyid' => 'required',
+                'accountid' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(validatorMessage($validator));
+            }
+            $school = getSchoolIdBySessionID($request->companyid);
+            
+            $allclass = $this->facultyClassesToNumericValue('all',$school->school_id);
+            $faculty = Faculty::select('assignclass')->where([['faculty_id',$request->accountid],['school_id',$school->school_id]])->first();
+            $assignclass = !empty($faculty->assignclass)&&$faculty->assignclass!=null?$faculty->assignclass=='all'?$allclass:$this->facultyClassesToNumericValue($faculty->assignclass,$school->school_id):[];
+            $result = [
+                'allclass'=> $allclass,
+                'permittedclass'=> $assignclass
+            ];
+            return customResponse(1,$result);
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+        }
+    }
+
+    function facultyClassesToNumericValue($assignedclass,$school_id){
+        if($assignedclass=='all'){
+            // DB::raw("JSON_OBJECT(classes.id,JSON_ARRAYAGG(JSON_OBJECT('id',sections.id,'section',sections.section))) as section")
+            $classSesction = Classes::select('class','classes.id',
+                    DB::raw("JSON_ARRAYAGG(JSON_OBJECT('id',sections.id,'section',sections.section)) as section")
+                )
+                ->join('sections','sections.class_id','classes.id')
+                ->where('classes.school_id',$school_id)
+                ->groupBy('classes.id')->orderBy('classes.position_by','asc')->orderBy('classes.class','asc')->get();
+        }else{
+            $a = json_decode($assignedclass,true);
+            $maparray = [];
+            foreach($a as $c){
+                foreach($c['section'] as $s){
+                    $maparray[]=$c['class'].'-'.$s;
+                }
+            }
+            $classSesction = Classes::select('class','classes.id',
+                    DB::raw("JSON_ARRAYAGG(JSON_OBJECT('id',sections.id,'section',sections.section)) as section")
+                )
+                ->join('sections','sections.class_id','classes.id')
+                ->where('classes.school_id',$school_id)
+                ->whereIn(DB::raw("CONCAT(class, '-', section)"), $maparray)
+                ->groupBy('classes.id')->orderBy('classes.position_by','asc')->orderBy('classes.class','asc')->get();
+        }
+        $allclasss= [];
+        foreach($classSesction as $d){
+            $allclasss[]=[
+                'id'=>$d->id,
+                'class'=>$d->class,
+                'section'=>json_decode($d->section,true)
+            ];
+        }
+        // dd($allclasss);
+        return $allclasss;
+    }
+
     public function changeFacultyPermission(Request $request){
         try{
             // $accountid=$_POST['accountid'];

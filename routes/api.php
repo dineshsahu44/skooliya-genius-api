@@ -16,6 +16,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DeleteController;
 use App\Http\Controllers\OfflineApiController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\MarksEntryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +43,7 @@ Route::middleware('checkurl')->group(function(){
     Route::any('/fees-details',[FeesController::class,'feesDetails']);
     Route::get('/studentfeecard.php',[FeesController::class,'studentFeeCard']);
     Route::any('/faculty-attendace',[AttendanceController::class,'facultyAttendace']);
+    Route::any('/marks-entry',[MarksEntryController::class,'classAndSubjectwiseMarksEntry']);
 
     Route::any('machine-attendance',[AttendanceController::class,'machineAttendance']);
     Route::group(['middleware' => 'auth.verify'], function(){
