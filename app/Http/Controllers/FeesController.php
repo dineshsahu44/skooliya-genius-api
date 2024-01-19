@@ -301,6 +301,7 @@ class FeesController extends Controller
             ->where([['registrations.session', '=', $companyid],
             // ['registrations.status', '=', 'Active']
             ])
+            ->whereIn('registrations.status', $request->student_status)
             // ->where('student_fee_details.status', '=', 1)
             // ->where('student_fee_details.transection_id', '=', DB::raw('FT.transection_id'))
             // ->where([[ DB::raw('date(FT.t_date)'), '>=', $from_date],[ DB::raw('date(FT.t_date)'), '<=', $to_date]])

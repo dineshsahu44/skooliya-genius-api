@@ -288,6 +288,15 @@
                         <option value="" selected disabled>Select Section</option>
                     </select>
                 </div>
+                
+            </div>
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col-xs-6">
+                    <label style="margin-bottom:0px;"><input type="checkbox" name="student_status[]" value="Active" checked>Active Student</label>
+                </div>
+                <div class="col-xs-6">
+				    <label style="margin-bottom:0px;"><input type="checkbox" name="student_status[]" value="Deactive">Discontinued</label> 
+                </div>
             </div>
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-12">
