@@ -70,7 +70,7 @@
         .special-list {
             margin-bottom: 10px;
             /* padding: 10px 15px; */
-            padding: 10px 15px 10px 4px;            
+            padding: 2px 15px 2px 4px;            
             line-height: 35px;
             border: 2px solid #d5d5d5;
             border-radius: 5px;
@@ -92,15 +92,31 @@
         }
 
         .circle-badge {
+            position: relative;
             margin-right: 15px;
             margin-left: 3px;
-            width: 35px;
-            height: 35px;
+            width: 45px;
+            height: 45px;
             line-height: 35px;
             border-radius: 50%;
             color: #fff;
             text-align: center;
-            background: #f39c12;
+            background: #fff;
+            border: 1px solid #999;
+            font-weight: 600;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .circle-badge::after {
+            content: "+";
+            position: absolute;
+            top: 90%;
+            left: 85%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            color: #000000;
+            font-size: 24px;
             font-weight: 600;
         }
 
@@ -169,8 +185,7 @@
         }
 
     </style>
-    <link rel="stylesheet" type="text/css"
-        href="https://adminlte.io/themes/AdminLTE/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://adminlte.io/themes/AdminLTE/bower_components/bootstrap/dist/css/bootstrap.min.css">
     
     <link rel="stylesheet" href="https://adminlte.io/themes/AdminLTE/bower_components/bootstrap/dist/css/bootstrap.min.css">
 
@@ -191,6 +206,100 @@
 <script src="https://adminlte.io/themes/AdminLTE/plugins/input-mask/jquery.inputmask.js"></script>
 <script src="https://adminlte.io/themes/AdminLTE/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
 <script src="https://adminlte.io/themes/AdminLTE/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+<style>
+    .crop-button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .photo-editor {
+        width: 100%;
+        height: 100%;
+        background-color: #2b2b2b;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .photo-editor.visible {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background-color: #444;
+    }
+
+    .header h1 {
+        font-size: 16px;
+        margin: 0;
+        color: #e5e5e5;
+    }
+
+    .header .icons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .header .icon {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .header .icon img {
+        width: 20px;
+        height: 20px;
+        filter: invert(100%);
+    }
+
+    .image-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: calc(100% - 100px); /* Adjust based on header height */
+    }
+
+    .image-container img,
+    .image-container video {
+        max-width: 100%;
+        max-height: 100%;
+        display: none;
+    }
+
+    .crop-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background-color: #444;
+    }
+
+    .crop-controls button {
+        padding: 10px 20px;
+        background-color: #555;
+        color: #ddd;
+        border: none;
+        cursor: pointer;
+    }
+
+    .crop-controls button:hover {
+        background-color: #666;
+    }
+
+</style>
+<link rel="stylesheet" href="https://unpkg.com/cropperjs@1.5.12/dist/cropper.min.css">
 <script>
     function setSection(classid,sectionid,allclasswithsection){
         allclasswithsection = JSON.parse(allclasswithsection);
@@ -219,8 +328,8 @@
 
 <body class="skin-red sidebar-mini fixed">
     <section class="content">
-        <form action="#" method="post" id="fee_day_book_form">
-            <div class="row" style="margin-bottom: 10px;">
+        <form action="#" method="post" id="student_photo_form">
+            <!-- <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-6">
                     <span class="block input-icon input-icon-right">
                         <div class="title-overlap">From Date <span class="text-danger font-weight-bold">*</span>
@@ -246,7 +355,7 @@
                         </div>
                     </span>
                 </div>
-            </div>
+            </div> -->
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-6">
                     <select id="class" name="class" class="form-control"  onchange="setSection('class','section','{{json_encode($assigned_class['permittedclass'])}}')" required>
@@ -275,37 +384,67 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="total-due-panel">
-                    <div class="f-s-17 f-w-5">Total Collection</div>
-                    <div class="f-s-25 f-w-6" id="total-collection">₹0</div>
+                    <div class="f-s-17 f-w-5">Total Student: <span class="f-w-6" id="total-student">0</span></div>
                 </div>
             </div>
         </div>
         <div class="row" style="max-height: 100vh;overflow: auto;">
             <div class="col-md-12">
-                <ul class="custom-list" id="fee-day-book-list">
+                <ul class="custom-list" id="student-list">
                 </ul>
             </div>
         </div>
     </section>
 
+    <div id="photoEditor" class="photo-editor">
+        <div class="header">
+            <div class="icons" style="color:white;width: 90%;">
+                <button class="icon" id="uploadButton" title="Upload Image"><i class="fa fa-upload"  style="font-size: 20px;"></i> File</button>
+                <button class="icon" id="openCameraButton"><i class="fa fa-camera" style="font-size: 20px;"></i> Camera</button>
+                <div id="imageSizeDisplay"></div>
+            </div>
+            <div class="icons" style="color:white;/*width: 10%;*/">
+                @php
+                    $acceptedExtensions = implode(',',accpectFiles('student-photo-files')['extension-type']);
+                @endphp
+                <input type="file" id="fileInput" accept="image/png,image/jpeg" data-max-size="{{accpectFiles('student-photo-files')['max-size']*1024}}" style="display:none;">
+                <button class="icon close-icon" id="closeEditorButton" title="Close"><i class="fa fa-close" style="font-size: 20px;"></i></button>
+            </div>
+        </div>
+        <div class="image-container">
+            <video id="videoElement" style="display:none;" autoplay></video>
+            <img id="photo" src="#" alt="Uploaded Image" style="display:none;">
+        </div>
+        <div class="crop-controls">
+            <button class="icon" id="switchCameraButton" style="display:none;"><i class="fa fa-refresh" style="font-size: 20px;"></i></button>
+            <button class="crop-button" id="takePhotoButton" style="display:none;">Take Picture</button>
+            <button class="crop-button" id="cropButton" style="display:none;">Crop</button>
+            <button class="crop-button" id="rotateButton" style="display:none;">Rotate</button>
+            <button class="crop-button" id="undoButton" style="display:none;">Undo</button>
+            <button class="icon" id="sendButton" style="display:none;">Send</button>
+        </div>
+    </div>
+
     <script>
+
+
         $(document).ajaxStart(function(){
             $.LoadingOverlay("show");
         });
         $(document).ajaxStop(function(){
             $.LoadingOverlay("hide");
         });
-		$('.datepicker').datepicker({
-			autoclose: true,
-			format: "dd-mm-yyyy",
-			// immediateUpdates: true,
-			todayBtn: true,
-			todayHighlight: true
-		}).datepicker("setDate", "0");
+		// $('.datepicker').datepicker({
+		// 	autoclose: true,
+		// 	format: "dd-mm-yyyy",
+		// 	// immediateUpdates: true,
+		// 	todayBtn: true,
+		// 	todayHighlight: true
+		// }).datepicker("setDate", "0");
         
-		$('.datepicker').inputmask('dd-mm-yyyy', { 'placeholder': 'dd-mm-yyyy' });
+		// $('.datepicker').inputmask('dd-mm-yyyy', { 'placeholder': 'dd-mm-yyyy' });
 
-        $("#fee_day_book_form").on("submit", function (e) {
+        $("#student_photo_form").on("submit", function (e) {
 			e.preventDefault(); // Prevent the form from submitting normally
 			$.ajax({
 				type: 'POST',
@@ -321,33 +460,35 @@
 				success: function(data) {
                     // console.log(data);
                     // var payment=0;
-                    var total_paid_amount = 0;
+                    var total_student = 0;
                     var list = '';
-                    $.each(data,function(k,ph){
-                        list += `<li class="special-list success-list"
-                            data-amount-in-word="`+properCase(getIndianCurrency(ph['paid_amount']))+`"
-                            data-receipt-details='`+JSON.stringify(ph)+`'
-                            data-fees-details='`+ph["object"]+`'>
-                                <div class="circle-badge">`+(k+1)+`</div>
-                                <div class="flex-row">
-                                    <div class="justify-between">
-                                        <div>`+ph['ReceiptNo']+`</div>
-                                        <div>`+properCase(ph['StudentName'])+`</div>
+                    $.each(data['students'], function(k, ph) {
+                        // Check if photo URL is valid
+                        const backgroundStyle = ph['photo'] ? `background-image: url('${ph['photo']}');` : '';
+
+                        list += `<li class="special-list success-list" data-receipt-details='${JSON.stringify(ph)}'>
+                                    <div class="circle-badge openEditorFromPhotoButton" style="${backgroundStyle}"></div>
+                                    <div class="flex-row">
+                                        <div class="justify-between">
+                                            <div style="width: 40%;">${ph['studentid']}</div>
+                                            <div style="width: 60%;">${properCase(ph['name'])}</div>
+                                        </div>
+                                        <div class="text-muted justify-between f-s-15">
+                                            <div style="width: 40%;">${ph['class']} - ${ph['section']}</div>
+                                            <div style="width: 60%;">${ph['fathername']}</div>
+                                        </div>
                                     </div>
-                                    <div class="text-muted justify-between f-s-15">
-                                        <div>`+ph['ReceiptDate']+`</div>
-                                        <div>`+ph['Class']+` - `+ph['Section']+`</div>
-                                        <div>`+(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(ph['paid_amount']))+`</div>
+                                    <div>
+                                        <button class="openEditorFromFileButton" title="Upload Image"><i class="fa fa-upload" style="font-size: 20px;"></i></button>
                                     </div>
-                                </div>
-                            </li>`;
-                        total_paid_amount +=ph['paid_amount'];
-                        // console.log(ph['paid_amount'],total_paid_amount);
+                                </li>`;
+                        total_student++;
                     });
-                    // console.log(total_paid_amount);
-                    $('#total-collection').text(new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total_paid_amount));
-                    $('#fee-day-book-list').html(list);
-                    $('.success-list').on('click', function(){
+
+                    // console.log(total_student);
+                    $('#total-student').text(total_student);
+                    $('#student-list').html(list);
+                    $('.success-list1').on('click', function(){
                         var fees_details = $(this).data('fees-details');
                         var receipt_details = $(this).data('receipt-details');
                         if (fees_details) {
@@ -534,7 +675,8 @@
     <script type="text/JavaScript" src="https://cdnjs.cloudflare.com/ajax/libs/jQuery.print/1.6.0/jQuery.print.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
-
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+    <script src="https://unpkg.com/cropperjs@1.5.12/dist/cropper.min.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -667,6 +809,478 @@
         // ];
 
     </script>
+
+<script>
+    let cropper; // Define cropper in the global scope
+    let originalImageData;
+    let videoStream;
+    let usingFrontCamera = false; // Default to using the back camera
+    let currentStudentDetails = null;
+    let mainParameter = "api/updateStudentProfile?companyid={{ $companyid }}&servername={{ $servername }}";
+    let currentStudentListItem = null;
+    $(document).ready(function () {
+
+        // Trigger file upload
+        $(document).on('click', '.openEditorFromFileButton', function (event) {
+            currentStudentListItem = $(this).closest('li');
+            currentStudentDetails = $(this).closest('li').data('receipt-details');
+            // $(this).closest('li').
+            // console.log('Student details:', currentStudentDetails);
+            $('#fileInput').click();
+        });
+        $(document).on('click', '.openEditorFromPhotoButton', function (event) {
+            currentStudentListItem = $(this).closest('li');
+            currentStudentDetails = $(this).closest('li').data('receipt-details');
+            // console.log('Student details:', currentStudentDetails);
+            $('#openCameraButton').click();
+        });
+
+        $('#closeEditorButton').click(function () {
+            closeEditor();
+        });
+
+        $('#uploadButton').click(function () {
+            $('#fileInput').click();
+        });
+
+        $('#fileInput').change(function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                // console.log('File selected:', file);
+                closeVideoStream();
+                $('#photoEditor').addClass('visible');
+                if (file.size > 100 * 1024) { // Check if file size is greater than 100 KB
+                    compressImage(file, function (compressedFile) {
+                        // console.log('Compressed file:', compressedFile);
+                        processImage(compressedFile);
+                        displayImageSize(compressedFile);
+                    });
+                } else {
+                    processImage(file);
+                    displayImageSize(file);
+                }
+                $('#cropButton').show();
+                $('#rotateButton').show();
+                $('#undoButton').hide();
+                $('#takePhotoButton').hide();
+                $('#sendButton').hide();
+            }
+        });
+
+        $('#cropButton').click(function () {
+            if (!cropper) return;
+
+            const croppedCanvas = cropper.getCroppedCanvas();
+            if (croppedCanvas) {
+                const croppedDataURL = croppedCanvas.toDataURL('image/png');
+                compressImageDataUrl(croppedDataURL, function (compressedDataURL) {
+                    // $('#photo').attr('src', croppedDataURL).show();
+                    $('#photo').attr('src', compressedDataURL).show();
+                    fitImageToCropArea($('#photo')[0]);
+                    $('#undoButton').show();
+                    $('#cropButton').hide();
+                    $('#rotateButton').hide();
+                    $('#switchCameraButton').hide();
+                    $('#sendButton').show();
+                    // displayImageSizeFromSrc(croppedDataURL);
+                    displayImageSizeFromSrc(compressedDataURL);
+                });
+            } else {
+                console.error('Failed to get cropped canvas');
+            }
+        });
+
+        $('#rotateButton').click(function () {
+            if (cropper) {
+                cropper.rotate(90);
+            }
+        });
+
+        $('#undoButton').click(function () {
+            if (originalImageData) {
+                $('#photo').attr('src', originalImageData).show();
+                fitImageToPage($('#photo')[0]);
+                initCropper($('#photo')[0]);
+                $('#undoButton').hide();
+                $('#cropButton').show();
+                $('#rotateButton').show();
+                $('#sendButton').hide();
+                displayImageSizeFromSrc(originalImageData);
+            }
+        });
+
+        $('#openCameraButton').click(async function () {
+            await openCamera();
+        });
+
+        $('#switchCameraButton').click(async function () {
+            usingFrontCamera = !usingFrontCamera;
+            await openCamera();
+        });
+
+        async function openCamera() {
+            closeVideoStream();
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: usingFrontCamera ? 'user' : 'environment'
+                    }
+                };
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const videoElement = $('#videoElement')[0];
+                videoElement.srcObject = videoStream;
+                $('#photoEditor').addClass('visible');
+                $('#videoElement').show();
+                $('#photo').hide();
+                $('#undoButton').hide();
+                $('#cropButton').hide();
+                $('#rotateButton').hide();
+                $('#takePhotoButton').show();
+                $('#sendButton').hide();
+                $('#switchCameraButton').show();
+            } catch (error) {
+                console.error('Error accessing camera: ', error);
+            }
+        }
+
+        $('#takePhotoButton').click(function () {
+            const videoElement = $('#videoElement')[0];
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+            const imageDataURL = canvas.toDataURL('image/png');
+            processImageDataURL(imageDataURL);
+            closeVideoStream();
+        });
+
+        $('#sendButton').click(function () {
+            sendImage();
+        });
+
+    });
+
+    function closeVideoStream() {
+        if (videoStream) {
+            let tracks = videoStream.getTracks();
+            tracks.forEach(track => track.stop());
+            videoStream = null;
+        }
+        $('#videoElement').hide();
+        $('#takePhotoButton').hide();
+        $('#switchCameraButton').hide();
+    }
+
+    function closeEditor() {
+        $('#photoEditor').removeClass('visible');
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        closeVideoStream();
+        $('#photo').attr('src', '').hide();
+        $('#cropButton').hide();
+        $('#rotateButton').hide();
+        $('#undoButton').hide();
+        $('#sendButton').hide();
+        $('#imageSizeDisplay').text('');
+    }
+
+    function processImage(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const photo = $('#photo');
+            const imageDataURL = e.target.result;
+            console.log('Image data URL:', imageDataURL);
+            photo.attr('src', imageDataURL).show();
+
+            originalImageData = imageDataURL;
+
+            fitImageToPage(photo[0]);
+            $('#cropButton').show();
+            $('#rotateButton').show();
+            initCropper(photo[0]);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function processImageDataURL(dataURL) {
+        const photo = $('#photo');
+        console.log('Image data URL:', dataURL);
+        photo.attr('src', dataURL).show();
+
+        originalImageData = dataURL;
+
+        fitImageToPage(photo[0]);
+        $('#cropButton').show();
+        $('#rotateButton').show();
+        initCropper(photo[0]);
+    }
+
+    function initCropper(imageElement) {
+        if (cropper) {
+            cropper.destroy();
+        }
+
+        cropper = new Cropper(imageElement, {
+            viewMode: 1,
+            dragMode: 'crop',
+            autoCropArea: 0.5,
+            aspectRatio: NaN,
+            restore: false,
+            guides: false,
+            center: false,
+            highlight: true,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            ready: function () {
+                const imageData = cropper.getImageData();
+                const imageWidth = imageData.width;
+                const imageHeight = imageData.height;
+                const cropBoxLeft = (imageWidth - 200) / 2;
+
+                cropper.setCropBoxData({
+                    top: 0,
+                    width: 150,
+                    height: 180
+                });
+            }
+        });
+    }
+
+    function fitImageToPage(imageElement) {
+        const maxWidth = $(window).width() * 0.9;
+        const maxHeight = $(window).height() * 0.9;
+
+        const image = new Image();
+        image.onload = function () {
+            const aspectRatio = image.width / image.height;
+
+            let newWidth = image.width;
+            let newHeight = image.height;
+
+            if (newWidth > maxWidth) {
+                newWidth = maxWidth;
+                newHeight = newWidth / aspectRatio;
+            }
+
+            if (newHeight > maxHeight) {
+                newHeight = maxHeight;
+                newWidth = newHeight * aspectRatio;
+            }
+
+            $(imageElement).css({
+                width: newWidth + 'px',
+                height: newHeight + 'px',
+            });
+        };
+        image.src = $(imageElement).attr('src');
+    }
+
+    function fitImageToCropArea(imageElement) {
+        if (!cropper) return;
+        cropper.destroy();
+        const cropBoxData = cropper.getCropBoxData();
+        const canvasData = cropper.getCanvasData();
+
+        const scaleX = imageElement.naturalWidth / canvasData.naturalWidth;
+        const scaleY = imageElement.naturalHeight / canvasData.naturalHeight;
+
+        const x = cropBoxData.left - canvasData.left;
+        const y = cropBoxData.top - canvasData.top;
+        const width = cropBoxData.width;
+        const height = cropBoxData.height;
+
+        $(imageElement).css({
+            width: width * scaleX + 'px',
+            height: height * scaleY + 'px',
+            marginLeft: -x * scaleX + 'px',
+            marginTop: -y * scaleY + 'px',
+        });
+    }
+
+    function compressImage(file, callback) {
+        console.log("compressImage");
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const img = new Image();
+            img.src = event.target.result;
+
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                const maxWidth = 800; // Max width for the image
+                const maxHeight = 600; // Max height for the image
+                let width = img.width;
+                let height = img.height;
+
+                // Calculate new size maintaining aspect ratio
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw image on canvas
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert canvas to Blob with desired quality and size
+                canvas.toBlob(function (blob) {
+                    const compressedFile = new File([blob], file.name, { type: file.type, lastModified: Date.now() });
+
+                    // Check if compressed file size is within 100 KB
+                    if (compressedFile.size <= 100 * 1024) {
+                        callback(compressedFile);
+                    } else {
+                        // If compressed size exceeds 100 KB, reduce quality and try again
+                        canvas.toBlob(function (secondBlob) {
+                            const secondCompressedFile = new File([secondBlob], file.name, { type: file.type, lastModified: Date.now() });
+                            callback(secondCompressedFile);
+                        }, file.type, 0.7); // Adjust quality (0.5 means 50% quality) as needed
+                    }
+                }, file.type, 1.0); // Adjust quality (0.7 means 70% quality) as needed
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function compressImageDataUrl(dataUrl, callback) {
+        console.log("compressImageDataUrl");
+        const img = new Image();
+        img.src = dataUrl;
+        $compresssionFirst = 1.0;
+        $compresssionSecond = 0.9;
+
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const maxWidth = 800; // Max width for the image
+            const maxHeight = 600; // Max height for the image
+            let width = img.width;
+            let height = img.height;
+
+            // Calculate new size maintaining aspect ratio
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw image on canvas
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Convert canvas to data URL with desired quality
+            canvas.toDataURL('image/jpeg', 1.0); // Adjust quality (0.7 means 70% quality) as needed
+
+            // Check if compressed data URL size is within 100 KB
+            if (dataUrl.length <= 100 * 1024) {
+                console.log("compressImageDataUrl in if condition: "+dataUrl.length);
+                callback(dataUrl);
+            } else {
+                // If compressed size exceeds 100 KB, reduce quality and try again
+                console.log("compressImageDataUrl in else condition: "+dataUrl.length/1000+"KB");
+                canvas.toBlob(function (blob) {
+                    const reader = new FileReader();
+                    reader.onloadend = function () {
+                        callback(reader.result);
+                    };
+                    reader.readAsDataURL(blob);
+                }, 'image/jpeg', 0.9); // Adjust quality (0.5 means 50% quality) as needed
+            }
+        };
+    }
+
+    function displayImageSize(file) {
+        const fileSizeKB = Math.round(file.size / 1024);
+        $('#imageSizeDisplay').text(`Image Size: ${fileSizeKB} KB`);
+    }
+
+    function displayImageSizeFromSrc(imageSrc) {
+        // Calculate the size of the base64 encoded image
+        const base64Length = imageSrc.length - (imageSrc.indexOf(',') + 1);
+        const padding = (imageSrc.charAt(imageSrc.length - 2) === '=') ? 2 : ((imageSrc.charAt(imageSrc.length - 1) === '=') ? 1 : 0);
+        const fileSizeBytes = (base64Length * 0.75) - padding;
+
+        const fileSizeKB = Math.round(fileSizeBytes / 1024);
+        $('#imageSizeDisplay').text(`Image Size: ${fileSizeKB} KB`);
+    }
+
+    function sendImage() {
+        const imageDataURL = $('#photo').attr('src');
+        if (!imageDataURL) {
+            alert('No image to send.');
+            return;
+        }
+
+        const blob = dataURLtoBlob(imageDataURL);
+        const formData = new FormData();
+        formData.append('profilephoto', blob, 'photo.png');
+        formData.append('activitytype','updatephoto');
+        // formData.append('companyid',);
+        formData.append('studentid',currentStudentDetails.studentid);
+        // formData.append('studentDetails', JSON.stringify(currentStudentDetails));
+
+        $.ajax({
+            url: window.location.origin+"/"+mainParameter, // Change this URL to your server endpoint
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', "Token");
+            },
+            success: function (response) {
+                if(response.success==1){
+                    currentStudentListItem.find('.circle-badge').css('background-image', `url(${response.imageurl})`);
+                    closeEditor();
+                }
+                // $.alert(response.msg);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert('Failed to upload image: ' + errorThrown);
+            }
+        });
+    }
+
+    function dataURLtoBlob(dataURL) {
+        const byteString = atob(dataURL.split(',')[1]);
+        const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+
+        return new Blob([ab], { type: mimeString });
+    }
+</script>
+
+
+
 </body>
 
 </html>

@@ -17,6 +17,7 @@ use App\Http\Controllers\DeleteController;
 use App\Http\Controllers\OfflineApiController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\MarksEntryController;
+use App\Http\Controllers\ShortenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,18 +33,32 @@ Route::any('/', function(){
     return view('welcome');
 });
 
+Route::any('/shorten', [ShortenController::class,'shorten']);
+Route::any('/decode', [ShortenController::class,'decode']);
+
 Route::any('/autoattendance', [StaticController::class,'autoAttendance']);
 Route::any('/hw/gsdt', [StaticController::class,'setEpt']);
 Route::get('/takeatour.php', [StaticController::class,'takeATour']);
+Route::any('/video-player', [StaticController::class,'videoPlayer']);
+Route::any('/biometricapi', [StaticController::class,'biometricapi']);
+Route::any('/create-id-card-excel', [StaticController::class,'getFileFolder']);
+Route::any('/uploadFaceData', [StaticController::class,'uploadFaceData']);
+
+Route::any('/biometricgetFile{filename}', [StaticController::class,'getFile']);
+Route::any('/uploadtoTimy', [StaticController::class,'uploadtoTimy']);
+// uploadtoTimy
 
 Route::middleware('checkurl')->group(function(){
     Route::post('/loginapi.php', [AuthController::class,'login']);
     Route::post('/tokenhandleapi.php', [AuthController::class,'tokenHandleApi']);
     Route::any('/fee-day-book',[FeesController::class,'feesDayBook']);
+    
+    Route::any('/student-photo-list',[StudentController::class,'studentPhotoList']);
     Route::any('/fees-details',[FeesController::class,'feesDetails']);
     Route::get('/studentfeecard.php',[FeesController::class,'studentFeeCard']);
     Route::any('/faculty-attendace',[AttendanceController::class,'facultyAttendace']);
     Route::any('/marks-entry',[MarksEntryController::class,'classAndSubjectwiseMarksEntry']);
+    Route::post('/updateStudentProfile', [StudentController::class,'updateStudentProfile']);
 
     Route::any('machine-attendance',[AttendanceController::class,'machineAttendance']);
     Route::group(['middleware' => 'auth.verify'], function(){

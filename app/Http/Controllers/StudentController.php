@@ -45,11 +45,22 @@ class StudentController extends Controller
             $sql = checkFacultyClassGetRaw($getclass,$getsection,$facluty_id,$getcompanyid);
             // Log::info('getStudents', ["sql"=>$sql]);
             // DB::enableQueryLog();
-            $students = Registration::select('registrations.registration_id as studentid','registrations.name','registrations.dob as dob',
-                'f_name as fathername','m_name as mothername','registrations.mobile as contactno','classes.class',
-                'registrations.photo','registrations.address as address1','registrations.city','sections.section','photopermission',
-                DB::Raw("IF(users.device_token IS NULL or users.device_token = '', 0, 1) as notificationflag"),
-                DB::Raw("IF(users.status = 1,'Active','Deactive') as status"))
+            $students = Registration::select(
+                    'registrations.registration_id as studentid',
+                    'registrations.name',
+                    DB::raw("IF(registrations.dob IS NOT NULL, DATE_FORMAT(registrations.dob, '%d-%m-%Y'), '') AS dob"),
+                    DB::raw('COALESCE(f_name, "") as fathername'),
+                    DB::raw('COALESCE(m_name, "") as mothername'),
+                    DB::raw('COALESCE(registrations.mobile, "") as contactno'),
+                    'classes.class',
+                    'registrations.photo',
+                    DB::raw('COALESCE(registrations.address, "") as address1'),
+                    DB::raw('COALESCE(registrations.city, "") as city'),
+                    'sections.section',
+                    'registrations.photopermission',
+                    DB::raw("IF(users.device_token IS NULL OR users.device_token = '', 0, 1) as notificationflag"),
+                    DB::raw("IF(users.status = 1, 'Active', 'Deactive') as status")
+                )
                 ->join('guardians','guardians.re_id','registrations.id')
                 ->join('classes','classes.id','registrations.class')
                 ->join('sections','sections.id','registrations.section')
@@ -116,6 +127,7 @@ class StudentController extends Controller
             $studentid = $request->studentid;
             $user = getAuth();
             if($activitytype=='resetpassword'){
+                // $user = getAuth();
                 $user_table = getUserTableRecord($user->school_id,$studentid);
                 Token::where('user_id', $user_table->id)->update(['revoked' => true]);
                 User::where([['role','student'],['school_id',$user->school_id],['username',$studentid]])->update(['password'=>'1234','device_token'=>null]);
@@ -149,6 +161,37 @@ class StudentController extends Controller
 
             return customResponse(0);
         }catch(\Exception $e){
+            // dd($e);
+            return exceptionResponse($e);
+        }
+    }
+
+    public function updateStudentProfile(Request $request){
+        try{
+            $acceptFiles = accpectFiles('faculty-photo-files');
+            $validator = Validator::make($request->all(),[
+                'companyid' => 'required',
+                'activitytype' => 'required',
+                'profilephoto' => $request->activitytype=='updatephoto'?'required|mimes:'.implode(',',$acceptFiles['extension-type']).'|max:'.$acceptFiles['max-size'].'':'',
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json(validatorMessage($validator));
+            }
+            $activitytype = $request->activitytype;
+            $companyid = $request->companyid;
+            $studentid = $request->studentid;
+            if($activitytype=='updatephoto'){
+                if ($request->hasFile('profilephoto')) {
+                    $attachment = saveFiles1($request->file('profilephoto'),$acceptFiles,$companyid);
+                    Registration::where([['session',$companyid],['registration_id',$studentid]])->update(['photo'=>$attachment]);
+                    return customResponse(1,['msg'=>'photo update done.','imageurl'=>$attachment]);
+                }
+                return customResponse(0,['msg'=>'photo update not done.']);
+            }
+            return customResponse(0);
+        }catch(\Exception $e){
+            // dd($e);
             return exceptionResponse($e);
         }
     }
@@ -241,10 +284,12 @@ class StudentController extends Controller
             $month = $_GET['month'];
             $year = $_GET['year'];
             $att_record = Attendance::select('att_date as entrydate','att_status as attendancevalue',
-                DB::Raw("IF(ISNULL(att_time)=1,'',att_time) as time"),DB::Raw("IF(ISNULL(remark)=1,'',att_time) as remarks"))
+                DB::Raw("COALESCE(att_time,'') as time, COALESCE(remark,'') as remarks"))
                 ->join('registrations','registrations.id','attendances.re_id')
                 ->where([['registrations.registration_id',$studentid],['registrations.session',$companyid]])
-                ->whereRaw("MONTH(att_date)=$month AND YEAR(att_date)=$year")->orderByRaw('att_date ASC','att_time ASC')->get();
+                ->whereRaw("MONTH(att_date)=$month AND YEAR(att_date)=$year")
+                ->orderByRaw('att_date ASC,att_time ASC')->get();
+                
             $holidays = Holiday::select('name as reason','h_date as entrydate')
             ->where('session_id',$companyid)->whereRaw("MONTH(h_date)=$month AND YEAR(h_date)=$year")->orderBy('h_date')->get();
 
@@ -369,6 +414,27 @@ class StudentController extends Controller
             return customResponse(0);
         }catch(\Exception $e){
             return exceptionResponse($e);
+        }
+    }
+
+    public function studentPhotoList(Request $request){
+        $auth_token = $request->header('Authorization');
+        $companyid = $request->companyid;
+        $accountid = $request->accountid;
+        if($request->isMethod('get')) {
+            // Create a request with the required parameters
+            $new_request = new Request([
+                'companyid' => $companyid,
+                'accountid' => $accountid,
+            ]);
+            // Call the getAllClasses function from the StaticController
+            $staticController = app(StaticController::class); 
+            $assigned_class = $staticController->getAllClasses($new_request);
+            $servername = $request->servername;
+            // $mainParameter = "api/studentprofileapi.php?companyid=".$request->companyid."&servername=".$request->servername;
+            return view("student-photo-list", compact("assigned_class","auth_token","companyid","servername"));
+        }elseif($request->isMethod('post')) {
+            return $this->getStudents($request);
         }
     }
 }

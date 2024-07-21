@@ -9,8 +9,12 @@ use App\Models\Classes;
 use App\Models\Section;
 use App\Models\HwMessage;
 use App\Models\HwMessageFor;
+use App\Models\School;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
 
 // use Log;
 
@@ -33,6 +37,9 @@ use Carbon\Carbon;
 
     function getUserTableRecord($school_id,$username){
         return User::where([['school_id',$school_id],['username',$username]])->first();
+    }
+    function getUserRecordByUsername($username){
+        return User::where([['username',$username]])->first();
     }
     function implodeClass($assignclass){
         $assignclass =  json_decode($assignclass,true);  
@@ -60,6 +67,16 @@ use Carbon\Carbon;
         $current_timestamp = Carbon::now()->timestamp;
         $fileName = $current_timestamp.'_'.cleanSpecial($file->getClientOriginalName());
         $path = '/'.getServerInfo()->path.'/'.getAuth()->school_id.'/'.$accpectFiles['path'];
+        // $path = getServerInfo()->path.'/'.getAuth()->school_id.'/'.$accpectFiles['path'];
+        $attachment = Storage::disk('my-disk')->putFileAs($path, $file, $fileName);
+        return env('APP_URL').$attachment;
+        // Here the first argument for putFileAs is the subfolder to save to
+    }
+
+    function saveFiles1($file,$accpectFiles,$companyid){
+        $current_timestamp = Carbon::now()->timestamp;
+        $fileName = $current_timestamp.'_'.cleanSpecial($file->getClientOriginalName());
+        $path = '/'.getServerInfo()->path.'/'.$companyid.'/'.$accpectFiles['path'];
         // $path = getServerInfo()->path.'/'.getAuth()->school_id.'/'.$accpectFiles['path'];
         $attachment = Storage::disk('my-disk')->putFileAs($path, $file, $fileName);
         return env('APP_URL').$attachment;
@@ -157,7 +174,14 @@ use Carbon\Carbon;
             ],
             "faculty-photo-files"=>[
                 "extension-type"=>[
-                    'png','jpeg','jpg','gif'
+                    'png','jpeg','jpg'
+                ],
+                "path"=>"app/profile",
+                "max-size"=>500//kb
+            ],
+            "student-photo-files"=>[
+                "extension-type"=>[
+                    'png','jpeg','jpg'
                 ],
                 "path"=>"app/profile",
                 "max-size"=>500//kb
@@ -333,6 +357,77 @@ use Carbon\Carbon;
             ]
         ];
         return $type!=null?$noti[$type]:$noti;
+    }
+
+    function getSchoolAndSessions(){
+        $facultySessionList = Faculty::select('school_sessions.id as companyid','school_sessions.name as session','school_sessions.start_date',
+            'school_sessions.end_date')
+            ->join('school_sessions','school_sessions.school_id','faculties.school_id')
+            ->where([['faculties.faculty_id',$user->username],['faculties.school_id',$user->school_id]])
+            ->orderBy('school_sessions.id','DESC')->get();
+    }
+
+    function getAllSchoolInfo(){
+        $schools = School::select(
+                'schools.*','schools.id as schoolid',
+                'schools.name as schoolname','school_sessions.name as session',
+                DB::raw('json_arrayagg(json_object(
+                "companyid",school_sessions.id,"session",school_sessions.name,
+                "start_date",school_sessions.start_date,"end_date",school_sessions.end_date,"status",COALESCE(school_sessions.status,"")
+                )) as sessionlist'),
+            )
+            ->join('school_sessions','school_sessions.school_id','schools.id')
+            // ->where([['faculties.faculty_id',$user->username],['faculties.school_id',$user->school_id]])
+            // ->orderBy('school_sessions.id','DESC')
+            ->groupBy('schools.id')
+            ->get();
+            // ->toArray();
+            // print_r($facultySessionList);die;
+            $schoolList = [];
+            foreach($schools as $school){
+                $sessionlist = json_decode($school->sessionlist,true);
+                // Filter for active status
+                $activeSessions = array_filter($sessionlist, function ($session) {
+                    return $session['status'] === 'Active';
+                });
+
+                // Initialize result
+                $currectSession = null;
+
+                if (!empty($activeSessions)) {
+                    // If there are active sessions, use the first one
+                    $currectSession = array_values($activeSessions)[0];
+                } else {
+                    // If no active sessions, find the max companyid
+                    $currectSession = array_reduce($sessionlist, function ($carry, $session) {
+                        return ($carry === null || $session['companyid'] > $carry['companyid']) ? $session : $carry;
+                    });
+                }
+                // echo json_encode($$currectSession);
+                $schoolList[] = [
+                    "schoolid"=> $school->schoolid,
+                    "schoolname"=> $school->school,
+                    "shortschoolname"=> $school->name,
+                    "school"=> $school->school,
+                    "city"=> $school->address,
+                    "phone"=> $school->mobile,
+                    "mobile"=> $school->mobile,
+                    "email"=> $school->email,
+                    "license"=> 1,
+                    "machine"=> 1,
+                    "currsessionid"=> $currectSession['companyid'],
+                    "currsessionyear"=> $currectSession['session'],
+                    "session_start"=> $currectSession['start_date'],
+                    "session_end"=> $currectSession['end_date'],
+                    "smspart1"=> "http=>//login.ourbulksms.com/api/sendhttp.php?authkey=15511A3oqms0FMKa5f87f7effffff&mobiles=",
+                    "smspart2"=> "&message=",
+                    "smspart3"=> "&sender=XAVlER&route=4&country=91&DLT_TE_ID=",
+                    "smspart4"=> "&unicode=11",
+                    "success"=> 1,
+                    "sessionlist" => $sessionlist,
+                ];
+            }
+        return $schoolList;
     }
 
     function getStudentTokenByConcatClass($assignClasses,$sessionId){
@@ -691,14 +786,14 @@ use Carbon\Carbon;
                     "accounttype"=> "student",
                     "activityname"=> "Leave Request",
                 ],
-                [
-                    "optionname"=> "Parent's Leave",
-                    "iconurl"=> "https://api.skooliya.com/images/leave-request.png",
-                    "color"=> "#4285f4",
-                    "redirecturl"=> "https://web.skooliya.com/Leaves/applyleave?role=guardian",
-                    "accounttype"=> "student",
-                    "activityname"=> "Parent's Leave Request",
-                ],
+                // [
+                //     "optionname"=> "Parent's Leave",
+                //     "iconurl"=> "https://api.skooliya.com/images/leave-request.png",
+                //     "color"=> "#4285f4",
+                //     "redirecturl"=> "https://web.skooliya.com/Leaves/applyleave?role=guardian",
+                //     "accounttype"=> "student",
+                //     "activityname"=> "Parent's Leave Request",
+                // ],
                 [
                     "optionname"=> "Parent's Attendance",
                     "iconurl"=> "https://api.skooliya.com/images/attendance-icon.png",
@@ -740,6 +835,15 @@ use Carbon\Carbon;
                     "redirecturl"=> "https://api.skooliya.com/api/marks-entry?apptype=faculty",
                     "accounttype"=> "teacher",
                     "activityname"=>  "Marks Entry",
+                ],
+                [
+                    "optionname"=> "Update Photo",
+                    "iconurl"=> "https://api.skooliya.com/images/Marks-Entry.png",
+                    "color"=> "#ff9b00",
+                    "redirecturl"=> "https://api.skooliya.com/api/student-photo-list?apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=>  "Update Photo",
+                    "viewType"=> 1, // 1-Custom Tab chrome, 0-webview
                 ],
             ],
             "admin"=>[
@@ -790,6 +894,15 @@ use Carbon\Carbon;
                     "redirecturl"=> "https://api.skooliya.com/api/marks-entry?apptype=faculty",
                     "accounttype"=> "admin",
                     "activityname"=>  "Marks Entry",
+                ],
+                [
+                    "optionname"=> "Update Photo",
+                    "iconurl"=> "https://api.skooliya.com/images/Marks-Entry.png",
+                    "color"=> "#ff9b00",
+                    "redirecturl"=> "https://api.skooliya.com/api/student-photo-list?apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=>  "Update Photo",
+                    "viewType"=> 1, // 1-Custom Tab chrome, 0-webview
                 ],
             ]
         ];
@@ -909,6 +1022,34 @@ use Carbon\Carbon;
         }
         return $subject;
     }
+
+    function generateShortenedRepresentation($inputString, $maxLength = 6)
+    {
+        // Calculate SHA-256 hash of the input string
+        $hash = Hash::make($inputString); // Using Laravel's built-in Hash facade
+
+        // Encode the hash using Base64 URL-safe encoding
+        $encodedHash = base64_encode($hash);
+
+        // Truncate to maximum length
+        $shortenedRepresentation = Str::substr($encodedHash, 0, $maxLength);
+
+        return $shortenedRepresentation;
+    }
+
+    function decodeShortenedRepresentation($shortenedRepresentation)
+    {
+        // Decode the base64-encoded string
+        $decodedString = base64_decode($shortenedRepresentation);
+    
+        if ($decodedString === false) {
+            // Handle decoding error
+            return null; // Or return an error message
+        }
+    
+        return $decodedString;
+    }
+    
 /*
     function schoolStatus(){
         return $status = array('Jr. Secondary'=>'Jr. Secondary','Sr. Secondary'=>'Sr. Secondary','Play Way'=>'Play Way','Nursery'=>'Nursery');

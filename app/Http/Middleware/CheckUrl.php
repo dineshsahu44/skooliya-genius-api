@@ -25,9 +25,9 @@ class CheckUrl
         try{
             config::set(['database.connections.mysql' => [
                 'driver'    => 'mysql',
-                'host'      => env('APP_ENV')=="local"?'217.21.80.2':"localhost",
-                'database'  => 'u210117126_test',
-                'username'  => 'u210117126_test',
+                'host'      => env('APP_ENV')=="local"?'15.206.28.6':"localhost",
+                'database'  => 'skooliya_test',
+                'username'  => 'skooliya_user',
                 'password'  => 'Skooliya@123',
                 'charset'   => 'utf8',
                 'collation' => 'utf8_unicode_ci',
@@ -38,7 +38,7 @@ class CheckUrl
             // dd($server);
             DB::disconnect();
             if($server){
-                if($server['dbhost']=='localhost'){$host='localhost';}elseif(env('APP_ENV')=="local"){$host='217.21.80.2';}else{ $host='localhost';}
+                if($server['dbhost']=='localhost'){$host='localhost';}elseif(env('APP_ENV')=="local"){$host='15.206.28.6';}else{ $host='localhost';}
                 $datadb = [
                     'driver'    => 'mysql',
                     'host'      => $host,

@@ -23,6 +23,7 @@ use DB;
 class AuthController extends Controller
 {
     public static function login(Request $request){
+        // dd(getAllSchoolInfo());
         Log::info('Auth Controller', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url(),"param"=>$_POST]);
         $msgUnauth = ["msg"=>"unauthorized access!"];
         $msgTable = ["msg"=>"record not found in table!"];
@@ -78,6 +79,7 @@ class AuthController extends Controller
                                 'authToken'=>  'Bearer '.$user->createToken('AuthToken')->accessToken,
                             ],
                             "sessionlist"=> $studentSessionList,
+                            "schoolsinfo"=> getAllSchoolInfo(),
                         ];
                     }else{
                         return customResponse(0,$msgTable);
@@ -116,6 +118,7 @@ class AuthController extends Controller
                                 'authToken'=>  'Bearer '.$user->createToken('AuthToken')->accessToken,
                             ],
                             "sessionlist"=> $facultySessionList,
+                            "schoolsinfo"=> getAllSchoolInfo(),
                         ];
                     }else{
                         return customResponse(0,$msgTable);
@@ -209,6 +212,7 @@ class AuthController extends Controller
                             ],
                             "youtubelink"=>$youtubelink,
                             "sessionlist"=> $studentSessionList,
+                            "schoolsinfo"=> getAllSchoolInfo(),
                         ];
                     }else{
                         $success = $msgTable;
@@ -284,6 +288,7 @@ class AuthController extends Controller
                             ],
                             "youtubelink"=>$youtubelink,
                             "sessionlist"=> $facultySessionList,
+                            "schoolsinfo"=> getAllSchoolInfo(),
                         ];
                     }else{
                         $success = $msgTable;

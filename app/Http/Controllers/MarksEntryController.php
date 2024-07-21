@@ -124,6 +124,7 @@ class MarksEntryController extends Controller
                     ->where('marks.TransactionType', '=', 'Marks');
             })
             ->where('registrations.session', $active_session_id)
+            ->where('registrations.status', 'Active')
             ->where('registrations.class', $data['class'])
             ->where('registrations.section', $data['section'])
             ->where('subjects.id', $data['subject'])

@@ -47,6 +47,7 @@ class FacultyController extends Controller
     public function updateFacultyPhoto(Request $request){
         try{
             // $accountid=$_POST['accountid'];	
+            // dd($request);
             $acceptFiles = accpectFiles('faculty-photo-files');
             $validator = Validator::make($request->all(),[
                 'accountid' => 'required',
@@ -61,9 +62,10 @@ class FacultyController extends Controller
                 $attachment = saveFiles($request->file('attachment'),$acceptFiles);
             }
             $user = getAuth();
-            Faculty::where([['faculty_id',$request->accountid],['school_id'=>$user->school_id]])->update(['photo'=>$attachment]);
+            Faculty::where([['faculty_id',$request->accountid],['school_id',$user->school_id]])->update(['photo'=>$attachment]);
             return customResponse(1,["msg"=>"profile pic updated","imageurl"=>$attachment]);
         }catch(\Exception $e){
+            // dd($e)
             return exceptionResponse($e);
         }
     }

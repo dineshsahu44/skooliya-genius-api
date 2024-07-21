@@ -30,7 +30,7 @@ class FeesController extends Controller
         // $enddate=$_GET['enddate'];
         // $companyid=$_GET['companyid'];
 
-        return customResponse(1,['totalfees'=>0]);
+        return customResponse(1,["totalfees"=>0]);
     }
 
     public function feesVoucher(Request $request){
@@ -85,7 +85,7 @@ class FeesController extends Controller
             'student_fee_details.start_month',
             DB::raw('SUM(student_fee_details.defult_amount) AS group_sum'),
             DB::raw('(CASE WHEN DATEDIFF(CURDATE(), student_fee_details.defaulter_date) > 0 THEN DATEDIFF(CURDATE(), student_fee_details.defaulter_date) ELSE 0 END) AS fine_days'),
-            DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT(
+            DB::raw('JSON_ARRAYAGG(JSON_OBJECT(
                         "month", student_fee_details.month,
                         "fhead", (CASE WHEN student_fee_details.structure_status="T FEE" THEN "Transport Fee" WHEN student_fee_details.structure_status="DUE FEE" THEN "Last Due" ELSE heads.head END),
                         "term", student_fee_details.term,
@@ -95,7 +95,7 @@ class FeesController extends Controller
                         "start_month", student_fee_details.start_month,
                         "end_month", student_fee_details.end_month,
                         "defaulter_date", student_fee_details.defaulter_date
-                    )), "]") as object'),
+                    )) as object'),
         ])
         ->join('registrations', 'registrations.id', '=', 'student_fee_details.re_id')
         ->leftJoin('heads', 'student_fee_details.head_id', '=', 'heads.id')
@@ -123,12 +123,12 @@ class FeesController extends Controller
             DB::raw("DATE_FORMAT(fee_transections.t_date, '%d-%m-%Y') as ReceiptDate"),
             'student_fee_details.registration_id as AppID',
             DB::raw("GROUP_CONCAT(DISTINCT LEFT(student_fee_details.month, 3) ORDER BY student_fee_details.start_month ASC SEPARATOR ', ') AS Months"),
-            DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT(
+            DB::raw('JSON_ARRAYAGG(JSON_OBJECT(
                         "fhead",
                         (CASE WHEN student_fee_details.structure_status="T FEE" THEN "Transport Fee" WHEN student_fee_details.structure_status="DUE FEE" THEN "Last Due" ELSE heads.head END),
                         "structure_status", student_fee_details.structure_status,
                         "defult_amount", student_fee_details.defult_amount
-                    )), "]") as object'),
+                    )) as object'),
         ])
         ->join('student_fee_details', 'fee_transections.id', '=', 'student_fee_details.transection_id')
         ->leftJoin('heads', 'student_fee_details.head_id', '=', 'heads.id')
@@ -153,7 +153,7 @@ class FeesController extends Controller
         $till_due_fees = $out_collection->filter(function ($value, $key) {
             $start_month = Carbon::createFromFormat('Y-m-d', $value->start_month);
             $current_date = Carbon::now()->format('Y-m-d');
-            return $value['term']=='Last Due'?true:($start_month->lte($current_date))?true:false;
+            return ($value['term']=='Last Due'?true:(($start_month->lte($current_date))?true:false));
         });
         $tillDue = $till_due_fees->sum('group_sum');
         $history_collection = collect($paymentHistory);
@@ -187,11 +187,11 @@ class FeesController extends Controller
             $sql = checkFacultyClassGetRaw($request->class,$request->section,$accountid,$companyid);
 
             $paymentHistory = StudentFeeDetail::selectRaw('
-                CONCAT("[", GROUP_CONCAT(JSON_OBJECT(
+                JSON_ARRAYAGG(JSON_OBJECT(
                     "fhead", (CASE WHEN student_fee_details.structure_status="T FEE" THEN "Transport Fee" WHEN student_fee_details.structure_status="DUE FEE" THEN "Old Balance" ELSE Head.head END),
                     "structure_status", student_fee_details.structure_status,
                     "defult_amount", student_fee_details.defult_amount
-                )), "]") AS object,
+                )) AS object,
                 GROUP_CONCAT(DISTINCT LEFT(student_fee_details.month, 3) ORDER BY student_fee_details.start_month ASC SEPARATOR ", ") AS Months,
                 student_fee_details.registration_id AS AppID,
                 FT.default_amount,
