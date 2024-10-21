@@ -17,6 +17,8 @@ use App\Models\Holiday;
 use DB;
 use Validator;
 use Log;
+use Carbon\Carbon;
+
 class StudentController extends Controller
 {
     public function getStudents(Request $request){
@@ -47,8 +49,13 @@ class StudentController extends Controller
             // DB::enableQueryLog();
             $students = Registration::select(
                     'registrations.registration_id as studentid',
+                    'registrations.id as re_id',
+                    'registrations.name',
+                    'classes.id as classid',
+                    'sections.id as sectionid',
                     'registrations.name',
                     DB::raw("IF(registrations.dob IS NOT NULL, DATE_FORMAT(registrations.dob, '%d-%m-%Y'), '') AS dob"),
+                    DB::raw("IF(registrations.dob IS NOT NULL, DATE_FORMAT(registrations.dob, '%Y-%m-%d'), '') AS dobStudent"),
                     DB::raw('COALESCE(f_name, "") as fathername'),
                     DB::raw('COALESCE(m_name, "") as mothername'),
                     DB::raw('COALESCE(registrations.mobile, "") as contactno'),
@@ -59,7 +66,8 @@ class StudentController extends Controller
                     'sections.section',
                     'registrations.photopermission',
                     DB::raw("IF(users.device_token IS NULL OR users.device_token = '', 0, 1) as notificationflag"),
-                    DB::raw("IF(users.status = 1, 'Active', 'Deactive') as status")
+                    DB::raw("IF(users.status = 1, 'Active', 'Deactive') as userstatus"),
+                    DB::raw("IF(registrations.status = 'Active', 'Active', 'Deactive') as status")
                 )
                 ->join('guardians','guardians.re_id','registrations.id')
                 ->join('classes','classes.id','registrations.class')
@@ -86,11 +94,15 @@ class StudentController extends Controller
             if ($validator->fails()) {
                 return response()->json(validatorMessage($validator));
             }
-            $student = Registration::select('roll_no as rollno','registrations.name','classes.class','sections.section','board_reg_no as admissionno',
-            'card_no as rfid','religion as caste','category','registrations.address as address1','registrations.city','registrations.mobile as contactno','r_date as admissiondate',
-            'registrations.dob','f_name as fathername','m_name as mothername','registrations.photo','aadhar_no as aadharno','registrations.email','registrations.status',
-            'm_mobile as mothermobile','f_mobile as fathermobile','photopermission')
-            ->join('classes','classes.id','registrations.class')
+            $student = Registration::select('roll_no as rollno','registrations.id as studentreid','registrations.name','classes.class','sections.section',
+                'board_reg_no as admissionno',
+                'card_no as rfid','religion as caste','category','registrations.address as address1',
+                'registrations.city','registrations.mobile as contactno','r_date as admissiondate',
+                'registrations.dob','f_name as fathername','m_name as mothername','registrations.photo',
+                'aadhar_no as aadharno','registrations.email','registrations.status',
+                'm_mobile as mothermobile','f_mobile as fathermobile','photopermission',
+                DB::raw("IF(dob IS NOT NULL, DATE_FORMAT(dob, '%m-%d'), '00-00') AS dobForMachine"),
+            )->join('classes','classes.id','registrations.class')
             ->join('sections','sections.id','registrations.section')
             ->join('guardians','guardians.re_id','registrations.id')
             ->where([['registrations.registration_id',$request->q],['registrations.session',$request->companyid]])->first();
@@ -166,9 +178,9 @@ class StudentController extends Controller
         }
     }
 
-    public function updateStudentProfile(Request $request){
+    public function updateStudentProfilePhoto(Request $request){
         try{
-            $acceptFiles = accpectFiles('faculty-photo-files');
+            $acceptFiles = accpectFiles('student-photo-files');
             $validator = Validator::make($request->all(),[
                 'companyid' => 'required',
                 'activitytype' => 'required',
@@ -198,7 +210,23 @@ class StudentController extends Controller
 
     public function markAttendance(Request $request){
         try{
+            // return $request->all();
+            
+            // dd($holidays);
+
             if($request->isMethod('get')&&$request->has('reporttype')&&$request->reporttype=='takeattandance'){
+                $holidays = Holiday::select('h_date as entrydate',DB::Raw("concat(name,'(',name,')') as reason"))->where([['session_id',$request->companyid],['h_date',$request->date]])->orderBy('h_date')->get();
+                if($holidays->count() > 0){
+                    return customResponse(0,['msg'=>"Can't take attendance. Already have holiday!"]);
+                }
+
+                $dateCheck = Carbon::parse($request->date); // Parse the given date
+
+                if ($dateCheck->isSunday()) {
+                    // The given date is Sunday
+                    return customResponse(0, ['msg' => "The given date is Sunday!"]);
+                }
+
                 $class=$_GET['class'];
                 $section=$_GET['section'];
                 $date=$_GET['date']; 
@@ -240,11 +268,25 @@ class StudentController extends Controller
                 ];
                 return customResponse(1,$result);
             }elseif($request->isMethod('post')&&$request->has('returnresponse')){
+
                 $companyid = $_GET['companyid'];
                 $returnresponse = $_POST['returnresponse'];
                 $data = json_decode($returnresponse);
                 $entrydate = $data->date;
                 $current_time = date("H:i:s");
+                
+                $holidays = Holiday::select('h_date as entrydate',DB::Raw("concat(name,'(',name,')') as reason"))->where([['session_id',$request->companyid],['h_date',$entrydate]])->orderBy('h_date')->get();
+                if($holidays->count() > 0){
+                    return customResponse(0,['msg'=>"Can't take attendance. Already have holiday!"]);
+                }
+
+                $dateCheck = Carbon::parse($entrydate); // Parse the given date
+
+                if ($dateCheck->isSunday()) {
+                    // The given date is Sunday
+                    return customResponse(0, ['msg' => "The given date is Sunday!"]);
+                }
+
                 $session = getSchoolIdBySessionID($companyid);
                 $user = getAuth();
                 $att_record = [];
@@ -430,11 +472,332 @@ class StudentController extends Controller
             // Call the getAllClasses function from the StaticController
             $staticController = app(StaticController::class); 
             $assigned_class = $staticController->getAllClasses($new_request);
+            // dd($assigned_class);
             $servername = $request->servername;
+            $serverinfo = getServerInfo();
+            $serverinfo = [
+                'addpermission'=>$serverinfo->addpermission,
+                'updatepermission'=>$serverinfo->updatepermission
+            ];
+
             // $mainParameter = "api/studentprofileapi.php?companyid=".$request->companyid."&servername=".$request->servername;
-            return view("student-photo-list", compact("assigned_class","auth_token","companyid","servername"));
+            return view("student-photo-list", compact("assigned_class","auth_token","companyid","servername","accountid","serverinfo"));
         }elseif($request->isMethod('post')) {
             return $this->getStudents($request);
         }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        
+        if(getServerInfo()->addpermission==1){
+            
+            $validator = Validator::make($request->all(),[
+                'studentreid' => 'required',
+                'studentid' => 'required',
+                'name' => 'required',
+                'class' => 'required',
+                'section' => 'required',
+                'companyid' => 'required',
+                'accountid' => 'required',
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json(validatorMessage($validator));
+            }
+            // return $request->all();
+            $companyid = $request->companyid;
+            $studentreid = $request->studentreid;
+            $studentid = $request->studentid;
+            $session = getSchoolIdBySessionID($companyid);
+            $user = getUserByUsername($request->accountid);
+            $classsection = Section::select('classes.id as classid','sections.id as sectionid','classes.class','sections.section')
+                ->join('classes','classes.id','sections.class_id')
+                ->where([["classes.class",$request->class],["sections.section",$request->section],['sections.school_id',$session->school_id]])
+                ->first();
+            // return $classsection;    
+            $student = [
+                'name'=>$request->name,
+                'address'=>$request->address,
+                'dob'=> ((Carbon::hasFormat($request->dob, 'd-m-Y'))?Carbon::createFromFormat('d-m-Y', $request->dob):null),
+                'mobile'=>$request->contactno,
+                'class'=>$classsection->classid,
+                'section'=>$classsection->sectionid,
+                // 'school_id'=>$session->school_id,
+                // 'session'=>$session->id,
+                'sync_property_id' => 2,
+                'oprator' => $user->id,
+                'status'=> $request->status,
+                // 'oprate_date' => now(),
+                // 'updated_at' =>now(),
+            ];
+            $guardian = [
+                'f_name'=> $request->fathername,
+                'm_name'=> $request->mothername,
+                'sync_property_id' => 2,
+                // 'updated_at' =>now(),
+            ];
+
+            Registration::where([['session',$session->id],['id',$studentreid],['registration_id',$studentid]])
+            ->update($student);
+            Guardian::where([['re_id',$studentreid],['registration_id',$studentid]])
+            ->update($guardian);
+            $students = $this->getSutdentInfo($studentreid,$session->id);
+            
+            return customResponse(1,['msg'=>'successfully updated done.',"studentinfo"=>$students]);
+        }else{
+            return customResponse(0,['msg'=>'not allow to upate profile.']);
+        }
+    }
+
+    public function addStudent(Request $request)
+    {
+        try{
+            if(getServerInfo()->addpermission==1){
+                // Validate the request data
+                $validator = Validator::make($request->all(), [
+                    'name' => 'required',
+                    'class' => 'required',
+                    'section' => 'required',
+                    'companyid' => 'required',
+                    'accountid' => 'required',
+                    // // 'dob' => 'required|date',
+                    // 'contactno' => 'required',
+                    // 'address' => 'required',
+                    // 'fathername' => 'required',
+                    // 'mothername' => 'required'
+                ]);
+
+                
+                if ($validator->fails()) {
+                    return response()->json(validatorMessage($validator));
+                }
+
+                $session = getSchoolIdBySessionID($request->companyid);
+                $user = getUserByUsername($request->accountid);
+                
+                $classsection = Section::select('classes.id as classid','sections.id as sectionid','classes.class','sections.section')
+                ->join('classes','classes.id','sections.class_id')
+                ->where([["classes.class",$request->class],["sections.section",$request->section],['sections.school_id',$session->school_id]])
+                ->first();
+
+                $masters = DB::table('masters')
+                    ->where('name', 'Registration_id')
+                    ->where('school_id', $session->school_id)
+                    ->orderBy('id', 'asc')
+                    ->first();
+
+                if (!$masters) {
+                    return response()->json(['error' => 'Master record not found'], 404);
+                }
+            
+                // Start transaction
+                DB::beginTransaction();
+                // Fetch the generated registration_id
+                $generatedIdResult = DB::select("SELECT getImpId('StudentAppId', 1, 0) AS registration_id");
+                $registrationId = $generatedIdResult[0]->registration_id;
+                // Create the student registration
+                $registration = new Registration([
+                    'registration_id' => $registrationId,
+                    'scholar_id' => $masters->value,
+                    'name' => $request->name,
+                    'dob' =>  ((Carbon::hasFormat($request->dob, 'd-m-Y'))?Carbon::createFromFormat('d-m-Y', $request->dob):null),
+                    'class'=>$classsection->classid,
+                    'section'=>$classsection->sectionid,
+                    'mobile' => $request->mobile,
+                    'address' => $request->address,
+                    'school_id' => $session->school_id,
+                    'oprator' => $user->id,
+                    'status' => 'Active',
+                    'session' => $session->id,
+                    'oprate_date' => now(),
+                    'transport' => 'Personal',
+                    's_type' => 'APIform',
+                    'fee_status' => 0,
+                    'sync_property_id' => 1,
+                    // 'created_at' => now(),
+                    // 'updated_at' => now(),
+                ]);
+                
+                if($registration->save()){
+                    // Get the last inserted ID and registration_id
+                    $lastInsertedId = $registration->id;
+                    $registrationId = $registration->registration_id;
+                    // dd([$lastInsertedId,$registrationId]);
+                    DB::table('masters')
+                        ->where('name', 'Registration_id')
+                        ->where('school_id', $session->school_id)
+                        ->update(['value' => ($masters->value + 1)]);
+
+                    // Create the guardian details
+                    Guardian::create([
+                        're_id' => $lastInsertedId,
+                        'registration_id' => $registrationId,
+                        'f_name' => $request->f_name,
+                        'm_name' => $request->m_name,
+                        'sync_property_id' => 1,
+                        // 'created_at' => now(),
+                        // 'updated_at' => now(),
+                    ]);
+
+                    // Create the user
+                    User::create([
+                        'name' => $request->name,
+                        'password' => $request->contactno, // Encrypting password
+                        'username' => $registrationId,
+                        'school_id' => $session->school_id,
+                        'role' => 'student',
+                        'status' => 1,
+                    ]);
+                }
+                // Commit transaction
+                DB::commit();
+                $students = $this->getSutdentInfo($lastInsertedId,$session->id);
+                return customResponse(1,['msg'=>'successfully added.',"studentinfo"=>$students]);
+            }else{
+                return customResponse(0,['msg'=>'not allow to add profile.']);
+            }
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+        }
+    }
+
+    public function addStudentToMachine(Request $request){
+        try{
+            // return $request->all();
+            $servername = $request->servername;
+            $machine = getMachinesInSchool($servername);
+
+            $companyid = $request->companyid;
+            $studentreid = $request->studentreid;
+            $studentid = $request->studentid;
+
+            $new_request = new Request([
+                'companyid' => $companyid,
+                'q' => $studentid,
+            ]);
+
+            $studentdata = $this->studentProfile($new_request);
+            // dd($studentdata);
+            $insertData = [];
+            
+            $photoUrlForBasename = $studentdata->photo;
+            $imageUrl = str_replace(" ", "%20", $photoUrlForBasename);
+            if (!empty($imageUrl)) {
+                if ($imageInfo = @getimagesize($imageUrl)) {
+                    $imageData = @file_get_contents($imageUrl);
+                    $base64Image = base64_encode($imageData);
+                    if ($imageData !== false) {        
+                        if($imageUrl!=null){                                        
+                            $cmdsetup = [
+                                "cmd" => "setuserinfo",
+                                "enrollid" => (int)$studentid,
+                                "name" => $studentdata->name,
+                                "backupnum" => 50,
+                                "admin" => 0,
+                                "birthday" => $studentdata->dobForMachine,
+                                "record" => $base64Image
+                            ];
+                        }                  
+                        foreach($machine as $m){                
+                            $insertData[] = [
+                                "serial" => $m,
+                                "name" => "setuserinfo",
+                                "content" => json_encode($cmdsetup),
+                                "gmt_crate" => now(),
+                                "gmt_modified" => now(),
+                            ];
+                        }
+                        if(count($insertData)>0){
+                            // Temporary connection configuration
+                            $tempDBConfig = [
+                                'driver'    => 'mysql',
+                                'host'      => "127.0.0.1",
+                                'database'  => 'faceskooliya_realtime',
+                                'username'  => 'faceskooliya_realtime',
+                                'password'  => 'Skooliya@123',
+                                'charset'   => 'utf8',
+                                'collation' => 'utf8_unicode_ci',
+                                'prefix'    => '',
+                                'strict'    => false,
+                            ];
+                    
+                            // Set temporary connection
+                            config(['database.connections.temp_mysql' => $tempDBConfig]);
+                            $tempDB = DB::connection('temp_mysql');
+                            // Insert data into the temporary database
+                            $tempDB->table('machine_command')->insert($insertData);
+                            $tempDB->disconnect();
+                            // temp connection close;
+                            Registration::where('id', $studentdata->studentreid)
+                            ->update(['s_position' => 1]);
+                            return customResponse(1,['msg'=>'successfully Face insertion done.']);
+                        }
+                    }
+                }
+            }
+            return customResponse(0,['msg'=>'Please check image first!']);
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+        }    
+    }
+
+    
+    public function studentShortProfile(Request $request)
+    {
+        try{        
+            // dd([$request->servername,$request->appid]);
+            $user = getUserByUsername($request->accountid);
+            $cursession = getcurrentSchoolAndSession($user->school_id);
+            $companyid = $cursession->sessionid;
+            $accountid = $request->accountid;
+            $new_request = new Request([
+                'companyid' => $companyid,
+                'q' => $accountid,
+            ]);
+            $studentdata = $this->studentProfile($new_request);
+            // return [$studentdata,$cursession];
+            $servername = $request->servername;
+            // $serverinfo = getServerInfo();
+            // $mainParameter = "api/studentprofileapi.php?companyid=".$request->companyid."&servername=".$request->servername;
+            // return view("student-photo-list", compact("assigned_class","auth_token","companyid","servername","accountid","serverinfo"));
+            return view("student-profile-short",compact("studentdata","cursession","companyid","servername","accountid"));
+        }catch(\Exception $e){
+            return exceptionResponse($e);
+        }
+    }
+
+    public function getSutdentInfo($studentreid,$sessionid){
+        $students = Registration::select(
+            'registrations.registration_id as studentid',
+            'registrations.id as re_id',
+            'registrations.name',
+            'classes.id as classid',
+            'sections.id as sectionid',
+            'registrations.name',
+            DB::raw("IF(registrations.dob IS NOT NULL, DATE_FORMAT(registrations.dob, '%d-%m-%Y'), '') AS dob"),
+            DB::raw("IF(registrations.dob IS NOT NULL, DATE_FORMAT(registrations.dob, '%Y-%m-%d'), '') AS dobStudent"),
+            DB::raw('COALESCE(f_name, "") as fathername'),
+            DB::raw('COALESCE(m_name, "") as mothername'),
+            DB::raw('COALESCE(registrations.mobile, "") as contactno'),
+            'classes.class',
+            'registrations.photo',
+            DB::raw('COALESCE(registrations.address, "") as address1'),
+            DB::raw('COALESCE(registrations.city, "") as city'),
+            'sections.section',
+            'registrations.photopermission',
+            DB::raw("IF(registrations.status = 'Active', 'Active', 'Deactive') as status")
+        )
+        ->join('guardians','guardians.re_id','registrations.id')
+        ->join('classes','classes.id','registrations.class')
+        ->join('sections','sections.id','registrations.section')
+        // ->leftJoin('users','users.username',DB::Raw("registrations.registration_id and users.role='student'"))
+        ->where([
+            ['registrations.session',$sessionid],
+            // ['registrations.status','Active'],
+            ['registrations.id',$studentreid],
+            // ['registrations.registration_id',$studentappid]
+        ])->first();
+        return $students;
     }
 }

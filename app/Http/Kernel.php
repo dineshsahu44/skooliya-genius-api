@@ -65,6 +65,8 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'checkurl' => \App\Http\Middleware\CheckUrl::class,
+        'checkshorturl' => \App\Http\Middleware\CheckShortUrl::class,
+
         'checkdatabase' => \App\Http\Middleware\checkDatabase::class,
         'checkofflineapi' => \App\Http\Middleware\CheckOfflineApi::class,
         'auth.verify' => \App\Http\Middleware\ApiTokenVerify::class,//token verify

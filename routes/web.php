@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImportDatabaseController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\StudentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +58,15 @@ Route::middleware('checkdatabase')->group(function(){
     Route::any('/import-database/importQuizFor', [ImportDatabaseController::class,'importQuizFor']);
     Route::any('/import-database/importQuizquestions', [ImportDatabaseController::class,'importQuizquestions']);
     Route::any('/import-database/setSchoolDatabase', [ImportDatabaseController::class,'setSchoolDatabase']);
+});
+
+
+
+Route::middleware('checkshorturl')->group(function(){
+    Route::get('p/{accountid}/{servername}', [StudentController::class,'studentShortProfile']);
+    Route::get('mis/{accountid}', function(){
+        
+    });
 });
 
 // Route::get('/jexcel', function () {

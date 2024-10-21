@@ -175,6 +175,7 @@ class FeesController extends Controller
             // Call the getAllClasses function from the StaticController
             $staticController = app(StaticController::class); 
             $assigned_class = $staticController->getAllClasses($new_request);
+            // dd($assigned_class);
             return view("fee-day-book", compact("assigned_class","auth_token"));
         }elseif($request->isMethod('post')) {
             $from_date = Carbon::createFromFormat('d-m-Y', $request->from_date)->format('Y-m-d');
@@ -249,6 +250,7 @@ class FeesController extends Controller
             // Call the getAllClasses function from the StaticController
             $staticController = app(StaticController::class); 
             $assigned_class = $staticController->getAllClasses($new_request);
+            // dd($assigned_class);
             return view("fees-details", compact("assigned_class","auth_token"));
         }elseif($request->isMethod('post')) {
             // $from_date = Carbon::createFromFormat('d-m-Y', $request->from_date)->format('Y-m-d');

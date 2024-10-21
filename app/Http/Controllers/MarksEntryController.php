@@ -39,10 +39,11 @@ class MarksEntryController extends Controller
             $staticController = app(StaticController::class); 
             $assigned_class = $staticController->getAllClassesWithNumeric($new_request);//$staticController->getAllClasses($new_request);            
             $mapedSubject = getMapedSubject($companyid);
+            $mapedCoSubject = getMapedCoScholasticSubject($companyid);
             // return $mapedSubject;
             $termAssessment = json_encode($this->getTermAssessment($companyid));
             
-            return view("marks-entry", compact("assigned_class","auth_token","mapedSubject","termAssessment"));
+            return view("marks-entry", compact("assigned_class","auth_token","mapedSubject","mapedCoSubject","termAssessment"));
         }elseif($request->isMethod('post')){
             if($request->operation=='get'){
                 $returnData = $this->getStudentsMarks($request->all());
@@ -112,6 +113,7 @@ class MarksEntryController extends Controller
         $active_session_id = $data['companyid'];// Get active session ID from your logic;
         
         $students = Registration::join('subject_students', 'subject_students.StudentRegID', '=', 'registrations.id')
+            ->join('guardians','guardians.re_id','registrations.id')
             ->join('subjects', 'subjects.id', '=', 'subject_students.SubjectID')
             ->leftJoin('marks', function ($join) use ($data) {
                 $join->on('marks.StudentRegID', '=', 'registrations.id')
@@ -138,6 +140,8 @@ class MarksEntryController extends Controller
                 'subjects.subject_name',
                 'registrations.class',
                 'registrations.section',
+                DB::raw('COALESCE(f_name, "") as fathername'),
+                DB::raw('COALESCE(m_name, "") as mothername'),
                 DB::raw('IF(marks.ObtMarks IS NOT NULL, marks.ObtMarks, "") AS ObtMarks'),
                 DB::raw('IF(marks.Remarks IS NOT NULL, marks.Remarks, "") AS Remarks'),
                 'marks.IsAbsent',
@@ -167,7 +171,38 @@ class MarksEntryController extends Controller
     }
 
     function getTermAssessment($companyid){
-        $reportSettings = DB::select(
+        // $reportSettings = DB::select(
+        //     "SELECT
+        //         SectionID,
+        //         JSON_OBJECTAGG(
+        //             TermID,
+        //             JSON_OBJECT(
+        //                 'Term', JSON_OBJECT('id', TermID, 'term', term),
+        //                 'Assessment', AssessmentData
+        //             )
+        //         ) AS SectionData
+        //     FROM (
+        //         SELECT
+        //             SectionID,
+        //             TermID,
+        //             terms.term,
+        //             CONCAT('[',GROUP_CONCAT( DISTINCT JSON_OBJECT('AssessmentID', AssessmentID, 'AssessmentName', assessments.assessment)),']') AS AssessmentData
+        //         FROM
+        //             report_settings
+        //         INNER JOIN
+        //             terms ON terms.id = report_settings.TermID
+        //         INNER JOIN
+        //             assessments ON assessments.id = report_settings.AssessmentID
+        //         WHERE
+        //             SessionID = $companyid 
+        //         GROUP BY
+        //             SectionID, TermID
+        //     ) AS Subquery
+        //     GROUP BY
+        //         SectionID;
+        // ");
+
+        $examSettings = DB::select(
             "SELECT
                 SectionID,
                 JSON_OBJECTAGG(
@@ -179,24 +214,27 @@ class MarksEntryController extends Controller
                 ) AS SectionData
             FROM (
                 SELECT
-                    SectionID,
-                    TermID,
-                    terms.term,
-                    CONCAT('[',GROUP_CONCAT( DISTINCT JSON_OBJECT('AssessmentID', AssessmentID, 'AssessmentName', assessments.assessment)),']') AS AssessmentData
-                FROM
-                    report_settings
-                INNER JOIN
-                    terms ON terms.id = report_settings.TermID
-                INNER JOIN
-                    assessments ON assessments.id = report_settings.AssessmentID
-                WHERE
-                    SessionID = $companyid 
-                GROUP BY
-                    SectionID, TermID
+					exam_settings.section_id as SectionID,
+					exam_settings.term_id as TermID,
+					terms.term,
+					CONCAT('[',GROUP_CONCAT( DISTINCT JSON_OBJECT('AssessmentID', exam_settings.assessment_id, 'AssessmentName', assessments.assessment)),']') AS AssessmentData
+				FROM
+					exam_settings
+				INNER JOIN
+					terms ON terms.id = exam_settings.term_id
+				INNER JOIN
+					assessments ON assessments.id = exam_settings.assessment_id
+				WHERE
+                    exam_settings.session_id = $companyid
+				GROUP BY
+					exam_settings.section_id, exam_settings.term_id
             ) AS Subquery
             GROUP BY
                 SectionID;
         ");
+
+        $reportSettings = $examSettings;
+
         $termAssessment = [];
         foreach($reportSettings as $r){
             $r = (array)$r;

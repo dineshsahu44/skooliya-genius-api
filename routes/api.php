@@ -18,6 +18,7 @@ use App\Http\Controllers\OfflineApiController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\MarksEntryController;
 use App\Http\Controllers\ShortenController;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,12 +54,29 @@ Route::middleware('checkurl')->group(function(){
     Route::post('/tokenhandleapi.php', [AuthController::class,'tokenHandleApi']);
     Route::any('/fee-day-book',[FeesController::class,'feesDayBook']);
     
+    Route::any('/uploadtoTimyMachineServer',[StaticController::class,'uploadtoTimyMachineServer']);    
+
     Route::any('/student-photo-list',[StudentController::class,'studentPhotoList']);
+    
+    Route::any('/staff-photo-list',[FacultyController::class,'staffPhotoList']);
+    Route::any('/updateFacultyPhotoForIDCard',[FacultyController::class,'updateFacultyPhotoForIDCard']);
+
+    Route::any('/updateFacultyProfile',[FacultyController::class,'updateFacultyProfile']);
+    Route::any('/addFacultyProfile',[FacultyController::class,'addFacultyProfile']);
+    Route::any('/addFacultyToMachine',[FacultyController::class,'addFacultyToMachine']);
+    
+
     Route::any('/fees-details',[FeesController::class,'feesDetails']);
     Route::get('/studentfeecard.php',[FeesController::class,'studentFeeCard']);
+    
     Route::any('/faculty-attendace',[AttendanceController::class,'facultyAttendace']);
     Route::any('/marks-entry',[MarksEntryController::class,'classAndSubjectwiseMarksEntry']);
-    Route::post('/updateStudentProfile', [StudentController::class,'updateStudentProfile']);
+    Route::post('/updateStudentProfilePhoto', [StudentController::class,'updateStudentProfilePhoto']);
+    Route::post('/updateStudentProfile', [StudentController::class,'updateProfile']);
+    Route::post('/addStudentProfile', [StudentController::class,'addStudent']);
+    Route::post('/addStudentToMachine', [StudentController::class,'addStudentToMachine']);
+    Route::post('/addToCart', [OrderController::class,'addOrder']);
+    
 
     Route::any('machine-attendance',[AttendanceController::class,'machineAttendance']);
     Route::group(['middleware' => 'auth.verify'], function(){
@@ -141,6 +159,7 @@ Route::middleware('checkurl')->group(function(){
         // 
     });
 });
+
 Route::group(['prefix' => "offline/{schoolname}", 'middleware' => 'checkofflineapi'], function () {
     Route::any('/admission.php',function(){
         return "Coming Soon";//OfflineApiController

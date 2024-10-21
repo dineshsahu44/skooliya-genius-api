@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Registration extends Model
+class OrderDetail extends Model
 {
     use HasFactory;
+
+    // Specify the custom primary key
+    protected $primaryKey = 'OrderDetailsID';
+    
     protected $guarded = [];
-    // public $timestamps = false;
 }

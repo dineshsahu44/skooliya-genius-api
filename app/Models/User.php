@@ -17,13 +17,15 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'username',
-        'password',
-    ];
+    // protected $fillable = [
+    //     'name',
+    //     'username',
+    //     'password',
+    // ];
+    // use HasFactory;
+    protected $guarded = [];
 
-    const CREATED_AT = 'createed';
+    const CREATED_AT = 'created';
     const UPDATED_AT = 'modified'; 
 
     /**

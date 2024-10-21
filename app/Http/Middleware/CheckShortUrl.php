@@ -10,7 +10,8 @@ use App\Models\Server;
 use App\Models\User;
 use Session;
 use Illuminate\Support\Facades\Log;
-class CheckUrl
+
+class CheckShortUrl
 {
     /**
      * Handle an incoming request.
@@ -21,7 +22,13 @@ class CheckUrl
      */
     public function handle(Request $request, Closure $next)
     {
-        Log::info('CheckUrl', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url()]);
+        // {appid}/{servername};
+        // dd($request->segments());
+        $segment = $request->segments();
+        if(@strtolower($segment[0])=="mis"){
+            return redirect("https://erp.madhavschool.in/student/qr-student-info.php?enrl=".$segment[1]);
+        }
+        Log::info('CheckShortUrl', ['Request' => $request,"urlFull"=>$request->fullUrl(),"url"=>$request->url()]);
         try{
             config::set(['database.connections.mysql' => [
                 'driver'    => 'mysql',

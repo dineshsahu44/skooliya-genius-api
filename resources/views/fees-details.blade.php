@@ -275,12 +275,12 @@
             </div> -->
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-6">
-                    <select id="class" name="class" class="form-control"  onchange="setSection('class','section','{{json_encode($assigned_class['permittedclass'])}}')" required>
+                    @php
+                        $allclasses = strtolower($assigned_class['userinfo']->role)=="admin"?$assigned_class['allclass']:$assigned_class['permittedclass'];
+                    @endphp
+                    <select id="class" name="class" class="form-control"  onchange="setSection('class','section','{{json_encode($allclasses)}}')" required>
                         <option value="" selected>Select Class</option>
                         <option value="All">All</option>
-                        @php
-                        $allclasses = strtolower($assigned_class['userinfo']->role)=="admin"?$assigned_class['allclass']:$assigned_class['permittedclass'];
-                        @endphp
                         @foreach($allclasses as $class)
                             <option value="{{ $class['class'] }}">{{ $class['class'] }}</option>
                         @endforeach

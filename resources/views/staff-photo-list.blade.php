@@ -204,16 +204,16 @@
     <script type="text/javascript" src="https://web.skooliya.com/js/AdminLTE/jquery.slimscroll.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
     <script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
+
     <!-- <script src="https://adminlte.io/themes/AdminLTE/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script> -->
+
+    <!-- below js have multiple widget facilities as datepicker and so-on https://api.jqueryui.com/datepicker/ -->
+    <script src="{{ asset('jquery-ui-1.14.0.custom/jquery-ui.js') }}"></script>
+    <!-- end below js have multiple widget facilities as datepicker and so-on -->
     
 <script src="https://adminlte.io/themes/AdminLTE/plugins/input-mask/jquery.inputmask.js"></script>
 <script src="https://adminlte.io/themes/AdminLTE/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
 <script src="https://adminlte.io/themes/AdminLTE/plugins/input-mask/jquery.inputmask.extensions.js"></script>
-
-<!-- below js have multiple widget facilities as datepicker and so-on https://api.jqueryui.com/datepicker/ -->
-<script src="{{ asset('jquery-ui-1.14.0.custom/jquery-ui.js') }}"></script>
-<!-- end below js have multiple widget facilities as datepicker and so-on -->
-
 <style>
     .crop-button {
         padding: 10px 20px;
@@ -336,32 +336,6 @@
         display: none !important;
     }
 </style>
-<style>
-    .toast {
-        visibility: hidden;
-        min-width: 250px;
-        margin-left: -125px;
-        background-color: #333;
-        color: #fff;
-        text-align: center;
-        border-radius: 2px;
-        /* padding: 16px; */
-        padding: 4px;
-        position: fixed;
-        z-index: 1000;
-        left: 50%;
-        bottom: 30px;
-        font-size: 17px;
-        transition: visibility 0.5s, opacity 0.5s ease-in-out;
-        opacity: 0;
-    }
-
-    .toast.show {
-        visibility: visible;
-        opacity: 1;
-    }
-    
-</style>
 <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.5.12/dist/cropper.min.css">
 <script>
     function setSection(classid,sectionid,allclasswithsection,allAllow){
@@ -412,32 +386,37 @@
         cursor: pointer;
     }
 </style>
+<style>
+    .toast {
+        visibility: hidden;
+        min-width: 250px;
+        margin-left: -125px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 2px;
+        /* padding: 16px; */
+        padding: 4px;
+        position: fixed;
+        z-index: 1000;
+        left: 50%;
+        bottom: 30px;
+        font-size: 17px;
+        transition: visibility 0.5s, opacity 0.5s ease-in-out;
+        opacity: 0;
+    }
 
+    .toast.show {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
 
 </head>
 
 <body class="skin-red sidebar-mini fixed">
     <section class="content">
         <form action="#" method="post" id="student_photo_form">
-            <div class="row" style="margin-bottom: 10px;">
-                <div class="col-xs-6">
-                    @php
-                        $allclasses = strtolower($assigned_class['userinfo']->role)=="admin"?$assigned_class['allclass']:$assigned_class['permittedclass'];
-                    @endphp
-                    <select id="class" name="class" class="form-control"  onchange="setSection('class','section','{{json_encode($allclasses)}}',true)" required>
-                        <option value="" selected>Select Class</option>
-                        <option value="All">All</option>
-                        @foreach($allclasses as $class)
-                            <option value="{{ $class['class'] }}">{{ $class['class'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-xs-6">
-                    <select id="section" name="section" class="form-control" required>
-                        <option value="" selected disabled>Select Section</option>
-                    </select>
-                </div>
-            </div>
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-12">
                     <button type="submit" class="col-xs-12 btn btn-info">Get Record</button>
@@ -447,14 +426,14 @@
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-12">
                     <div class="total-due-panel" style="position: relative;">
-                        <div class="f-s-17 f-w-5">Total Student: <span class="f-w-6" style="color: red;" id="studentCount">0</span> / <span class="f-w-6" id="total-student">0</span></div>
+                        <div class="f-s-17 f-w-5">Total Staff: <span class="f-w-6" style="color: red;" id="studentCount">0</span> / <span class="f-w-6" id="total-student">0</span></div>
                         <div id="filterIcon" style="position: absolute; top: 0; right: 0; z-index: 1001;">
                             <i class="fa fa-filter" style="font-size: 24px; cursor: pointer;"></i>
                         </div>
                         <div id="filterOptions" style="display: none; position: absolute; text-align: left; right: 0; top: 30px; z-index: 1000; background-color: white; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
-                            <label><input type="radio" name="filter" value="all" id="filterAll" checked> Show All Students</label><br>    
-                            <label><input type="radio" name="filter" value="withPhoto" id="filterWithPhoto"> Show Students With Photos</label><br>
-                            <label><input type="radio" name="filter" value="noPhoto" id="filterNoPhoto"> Show Students Without Photos</label>
+                            <label><input type="radio" name="filter" value="all" id="filterAll" checked> Show All Staff</label><br>    
+                            <label><input type="radio" name="filter" value="withPhoto" id="filterWithPhoto"> Show Staff With Photos</label><br>
+                            <label><input type="radio" name="filter" value="noPhoto" id="filterNoPhoto"> Show Staff Without Photos</label>
                         </div>
                     </div>
                 </div>
@@ -470,78 +449,62 @@
 
     <!-- Floating Button -->
      @if($serverinfo['addpermission']==1)
-        <button type="button" class="btn btn-primary floating-button" data-toggle="modal" data-target="#addStudentModal"> + </button>
+        <button type="button" class="btn btn-primary floating-button" data-toggle="modal" data-target="#addStaffModal"> + </button>
     @endif
 
     <!-- Add Student Modal -->
-    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal fade" id="addStaffModal" tabindex="-1" aria-labelledby="addStaffModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
-                    <h4 class="modal-title">Add Student</h4>
+                    <h4 class="modal-title">Add Staff</h4>
                 </div>
-                <form id="addStudentForm" action="#">
+                <form id="addStaffForm" action="#">
                     <div class="modal-body">
                         
-                            <div class="form-group">
-                                <label for="new-name">Name</label>
-                                <input type="text" name="name" class="form-control" id="new-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="new-dob">Date of Birth</label>
-                                <div class="input-group date">
-                                    <input type="text" class="form-control date-input-header datepicker" name="dob" placeholder="dd-mm-yyyy" id="new-dob" data-inputmask="'alias': 'dd-mm-yyyy'" value="${dob}" data-mask>
-                                    <div class="input-group-addon" style="border-color: #000000;">
-                                    <i class="fa fa-calendar"></i>
-                                    </div>
+                        <div class="form-group">
+                            <label for="new-name">Name</label>
+                            <input type="text" name="name" class="form-control" id="new-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-dob">Date of Birth</label>
+                            <div class="input-group date">
+                                <input type="text" class="form-control date-input-header datepicker" name="dob" placeholder="dd-mm-yyyy" id="new-dob" data-inputmask="'alias': 'dd-mm-yyyy'" value="${dob}" data-mask>
+                                <div class="input-group-addon" style="border-color: #000000;">
+                                <i class="fa fa-calendar"></i>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label for="new-fathername">Father's Name</label>
-                                <input type="text" name="f_name" class="form-control" id="new-fathername">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-mothername">Mother's Name</label>
-                                <input type="text" name="m_name" class="form-control" id="new-mothername">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-contactno">Mobile</label>
-                                <input type="text" name="mobile" class="form-control" id="new-contactno">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-address1">Address</label>
-                                <input type="text" name="address" class="form-control" id="new-address1">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-class-profile">Class</label>
-                                <select class="form-control" id="new-class-profile" name="class" onchange="setSection('new-class-profile','new-section-profile','{{json_encode($allclasses)}}',false)" required>
-                                    <option value="" selected>Select Class</option>
-                                    @foreach($allclasses as $class)
-                                        <option value="{{ $class['class'] }}">{{ $class['class'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="new-section-profile">Section</label>
-                                <select class="form-control" id="new-section-profile" name="section" required>
-                                    <!-- Section options will be populated dynamically -->
-                                </select>
-                            </div>
-                            <!-- <div class="form-group">
-                                <label for="new-status">Status</label>
-                                <select class="form-control" id="new-status" required>
-                                    <option value="Active">Active</option>
-                                    <option value="Deactive">Deactive</option>
-                                </select>
-                            </div> -->
-                        
+                        </div>
+                        <div class="form-group">
+                            <label for="new-contactno">Mobile</label>
+                            <input type="text" name="mobile" class="form-control" id="new-contactno">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-address1">Address</label>
+                            <input type="text" name="address" class="form-control" id="new-address1">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-section-profile">Role</label>
+                            <select name="role_id" class="form-control">
+                                @foreach($roles as $id => $role_name)
+                                    <option value="{{ $id }}">{{ $role_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <!-- <div class="form-group">
+                            <label for="new-status">Status</label>
+                            <select class="form-control" id="new-status" required>
+                                <option value="Active">Active</option>
+                                <option value="Deactive">Deactive</option>
+                            </select>
+                        </div> -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="saveNewStudent">Save changes</button>
+                        <button type="submit" class="btn btn-primary" id="saveNewStaff">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -576,50 +539,6 @@
             <button class="icon" id="sendButton" style="display:none;">Send</button>
         </div>
     </div>
-
-    <script>
-        function calenderJquery(){
-            
-            $('.datepicker').datepicker({
-                changeMonth: true,
-                changeYear: true,
-                autoclose: true,
-                dateFormat: "dd-mm-yy",
-                yearRange: "1970:"+(new Date().getFullYear()-1),
-                autoSize: true,
-                beforeShow: function(input, inst) {
-                // Dynamically change z-index when showing
-                    setTimeout(function() {
-                        inst.dpDiv.css({
-                            zIndex: 99999999999 // You can adjust this to your needs
-                        });
-                    }, 0);
-                }
-            })
-            
-            $('.datepicker').inputmask('dd-mm-yyyy', { 'placeholder': 'dd-mm-yyyy' });
-        }
-        calenderJquery();
-
-        function showToast(message, duration = 3000) {
-            // Check if a toast div already exists, if not, create one
-            let toast = $('#toast');
-            if (toast.length === 0) {
-                toast = $('<div id="toast" class="toast"></div>');
-                $('body').append(toast);
-            }
-
-            // Set the message and show the toast
-            toast.text(message);
-            toast.addClass('show');
-
-            // Hide the toast after the specified duration
-            setTimeout(function() {
-                toast.removeClass('show');
-            }, duration);
-        }
-        
-    </script>
 
     <script>
         $(document).ready(function() {
@@ -678,14 +597,57 @@
         });
     </script>
     <script>
-        let mainParameterPhoto = "api/updateStudentProfilePhoto?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
-        let mainParameterProfile = "api/updateStudentProfile?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
-        let mainParameterAddStudent = "api/addStudentProfile?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
-        let mainParameterAddToMachine = "api/addStudentToMachine?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
+
+        function calenderJquery(){
+            $('.datepicker').datepicker({
+                changeMonth: true,
+                changeYear: true,
+                autoclose: true,
+                dateFormat: "dd-mm-yy",
+                yearRange: "1970:"+(new Date().getFullYear()-1),
+                autoSize: true,
+                beforeShow: function(input, inst) {
+                // Dynamically change z-index when showing
+                    setTimeout(function() {
+                        inst.dpDiv.css({
+                            zIndex: 99999999999 // You can adjust this to your needs
+                        });
+                    }, 0);
+                }
+            })
+            
+            $('.datepicker').inputmask('dd-mm-yyyy', { 'placeholder': 'dd-mm-yyyy' });
+        }
+
+        function showToast(message, duration = 3000) {
+            // Check if a toast div already exists, if not, create one
+            let toast = $('#toast');
+            if (toast.length === 0) {
+                toast = $('<div id="toast" class="toast"></div>');
+                $('body').append(toast);
+            }
+
+            // Set the message and show the toast
+            toast.text(message);
+            toast.addClass('show');
+
+            // Hide the toast after the specified duration
+            setTimeout(function() {
+                toast.removeClass('show');
+            }, duration);
+        }
+
+        calenderJquery();
+
+        let mainParameterPhoto = "api/updateFacultyPhotoForIDCard?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
+        
+        let mainParameterProfile = "api/updateFacultyProfile?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
+        let mainParameterAddStaff = "api/addFacultyProfile?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
+        let mainParameterAddToMachine = "api/addFacultyToMachine?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
         let mainParameterAddToCart = "api/addToCart?companyid={{ $companyid }}&servername={{ $servername }}&accountid={{ $accountid }}";
 
-        var schoolClasses = @json($allclasses);
         const serverinfo = @json($serverinfo);
+        const roles = @json($roles);
 
         $(document).ajaxStart(function(){
             $.LoadingOverlay("show");
@@ -693,7 +655,15 @@
         $(document).ajaxStop(function(){
             $.LoadingOverlay("hide");
         });
+		// $('.datepicker').datepicker({
+		// 	autoclose: true,
+		// 	format: "dd-mm-yyyy",
+		// 	// immediateUpdates: true,
+		// 	todayBtn: true,
+		// 	todayHighlight: true
+		// }).datepicker("setDate", "0");
         
+		// $('.datepicker').inputmask('dd-mm-yyyy', { 'placeholder': 'dd-mm-yyyy' });
 
         $("#student_photo_form").on("submit", function (e) {
 			e.preventDefault(); // Prevent the form from submitting normally
@@ -713,11 +683,11 @@
                     // var payment=0;
                     var total_student = 0;
                     var list = '';
-                    $.each(data['students'], function(k, ph) {
+                    $.each(data['teachers'], function(k, ph) {
                         // Check if photo URL is valid
-                        // const backgroundStyle = ph['photo'] ? `background-image: url('${ph['photo']}');` : '';
+                        const backgroundStyle = ph['photo'] ? `background-image: url('${ph['photo']}');` : '';
                         // ${serverinfo.updatepermission == 1 ? 'view-profile' : ''}
-                        list += addStudentListItem(ph);
+                        list += addStaffListItem(ph);
                         total_student++;
                     });
                     
@@ -731,31 +701,45 @@
 			});
         });
 
+        function addStaffListItem(ph){
+            const backgroundStyle = ph['photo'] ? `background-image: url('${ph['photo']}');` : '';
+            // ${serverinfo.updatepermission == 1 ? 'view-profile' : ''}
+            var list = `<li class="special-list success-list" data-receipt-details='${JSON.stringify(ph)}'>
+                <div class="circle-badge openEditorFromPhotoButton" style="${backgroundStyle}"></div>
+                <div class="flex-row view-profile">
+                    <div class="justify-between">
+                        <div style="width: 40%;">${ph['accountid']}</div>
+                        <div style="width: 60%;" class="studentname-text">${properCase(ph['accountname'])}</div>
+                    </div>
+                    <div class="text-muted justify-between f-s-15">
+                        <div style="width: 40%;" class="mobile-text">${ph['mobile']}</div>
+                        <div style="width: 60%;" class="role-text">${properCase(roles[ph['role_id']] || '')}</div>
+                    </div>
+                </div>
+                <div>
+                    <button class="openEditorFromFileButton" title="Upload Image"><i class="fa fa-upload" style="font-size: 20px;"></i></button>
+                </div>
+            </li>`;
+            return list;
+        }
+
         // view profile start
         $(document).on('click', '.view-profile', function() {
             var currentStudentListItem1 = $(this).closest('li');
-            var currentStudentDetails1 = JSON.parse(urlDecode($(this).closest('li').data('receipt-details')));
+            var currentStudentDetails1 = $(this).closest('li').data('receipt-details');
             var backgroundImage = currentStudentListItem1.find('.circle-badge').css('background-image').replace('url("', '').replace('")', '');
-
-            // console.log(backgroundImage);
+            
+            // console.log(currentStudentDetails1);
 
             if (currentStudentDetails1) {
-                var classOptions = schoolClasses.map(schoolClass => `
-                    <option value="${schoolClass.class}" ${schoolClass.class === currentStudentDetails1.class ? 'selected' : ''}>
-                        ${schoolClass.class}
+                var roleOptions = Object.entries(roles).map(([key, value]) => `
+                    <option value="${key}" ${key == currentStudentDetails1.role_id ? 'selected' : ''}>
+                        ${value}
                     </option>
                 `).join('');
-
-                var selectedClass = currentStudentDetails1.class;
-                var selectedClassObject = schoolClasses.find(schoolClass => schoolClass.class === selectedClass);
-                var sectionOptions = selectedClassObject ? selectedClassObject.section.map(section => `
-                    <option value="${section}" ${section === currentStudentDetails1.section ? 'selected' : ''}>
-                        ${section}
-                    </option>
-                `).join('') : '';
-
+                // console.log(roleOptions);
                 // Convert the date to the format required by the date input (YYYY-MM-DD)
-                var dobParts = currentStudentDetails1.dobStudent;
+                var dobParts = currentStudentDetails1.dobStaff;
                 var dob = currentStudentDetails1.dob;
                 // var dobFormatted = `${dobParts[2]}-${dobParts[1]}-${dobParts[0]}`;
 
@@ -765,17 +749,23 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <form id="studentForm">
-                                        <input type="hidden" value="${currentStudentDetails1.re_id}" id="student_re_id">
+                                        <input type="hidden" value="${currentStudentDetails1.f_id}" id="staff_f_id">
                                         <div style="text-align: center;" >
                                             <img src="${backgroundImage}" width="150px" height="200px">
                                         </div>
                                         <div class="form-group">
-                                            <label for="studentid">Student ID</label>
-                                            <input type="text" class="form-control" id="studentid" value="${currentStudentDetails1.studentid}" readonly>
+                                            <label for="studentid">Staff ID</label>
+                                            <input type="text" class="form-control" id="facultyaccountid" value="${currentStudentDetails1.accountid}" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="class">Role</label>
+                                            <select class="form-control" id="faculty_role_id" name="role_id">
+                                                ${roleOptions}
+                                            </select>
                                         </div>
                                         <div class="form-group">
                                             <label for="name">Name</label>
-                                            <input type="text" class="form-control" id="name" value="${currentStudentDetails1.name}">
+                                            <input type="text" class="form-control" id="name" value="${currentStudentDetails1.accountname}">
                                         </div>
                                         <div class="form-group">
                                             <label for="dob">Date of Birth</label>
@@ -787,38 +777,18 @@
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label for="fathername">Father's Name</label>
-                                            <input type="text" class="form-control" id="fathername" value="${currentStudentDetails1.fathername}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="mothername">Mother's Name</label>
-                                            <input type="text" class="form-control" id="mothername" value="${currentStudentDetails1.mothername}">
-                                        </div>
-                                        <div class="form-group">
                                             <label for="contactno">Contact Number</label>
-                                            <input type="text" class="form-control" id="contactno" value="${currentStudentDetails1.contactno}">
+                                            <input type="text" class="form-control" id="contactno" value="${currentStudentDetails1.mobile}">
                                         </div>
                                         <div class="form-group">
                                             <label for="address1">Address</label>
                                             <input type="text" class="form-control" id="address1" value="${currentStudentDetails1.address1}">
                                         </div>
                                         <div class="form-group">
-                                            <label for="class">Class</label>
-                                            <select class="form-control" id="class-profile" name="class-profile">
-                                                ${classOptions}
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="section">Section</label>
-                                            <select class="form-control" id="section-profile" name="section-profile">
-                                                ${sectionOptions}
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
                                             <label for="status">Status</label>
                                             <select class="form-control" id="status">
-                                                <option value="Active" ${currentStudentDetails1.status === 'Active' ? 'selected' : ''}>Active</option>
-                                                <option value="Deactive" ${currentStudentDetails1.status === 'Deactive' ? 'selected' : ''}>Deactive</option>
+                                                <option value="Active" ${currentStudentDetails1.facultystatus === 'Active' ? 'selected' : ''}>Active</option>
+                                                <option value="Deactive" ${currentStudentDetails1.facultystatus === 'Deactive' ? 'selected' : ''}>Deactive</option>
                                             </select>
                                         </div>
                                     </form>
@@ -841,10 +811,10 @@
                             action: function () {
                                 var record = {
                                     reid: [
-                                        $('#student_re_id').val()
+                                        $('#staff_f_id').val()
                                     ],
                                     appid: [
-                                        $('#studentid').val()
+                                        $('#facultyaccountid').val()
                                     ],
                                 };
                                 // var formData = record;
@@ -853,7 +823,7 @@
                                     type: 'POST',
                                     data: {
                                         record:record,
-                                        OrderFor: 'StudentIDCard'
+                                        OrderFor: 'StaffIDCard'
                                     },
                                     headers: {
                                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -877,11 +847,11 @@
                         },
                         machine: {
                             text: 'Machine',
-                            btnClass: serverinfo.updatepermission == 1 ? 'btn-blue' : 'btn-blue hide',
+                            btnClass: 'btn-blue',
                             action: function () {
                                 var formData = {
-                                    studentreid: $('#student_re_id').val(),
-                                    studentid: $('#studentid').val(),
+                                    staff_f_id: $('#staff_f_id').val(),
+                                    facultyaccountid: $('#facultyaccountid').val(),
                                 };
                                 // console.log(formData);
                                 // Add your update logic here
@@ -894,12 +864,20 @@
                                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                                     },
                                     success: function(response) {
-                                        // console.log(response);
+                                        console.log(response);
                                         if (response.success) {
-                                            // currentStudentListItem1.find('.studentname-text').text(formData['name']);
-                                            // currentStudentListItem1.find('.class-section-text').text(formData['class']+" - "+formData['section']);
-                                            // currentStudentListItem1.find('.fathername-text').text(formData['fathername']);
-                                            // $.alert('Student profile updated successfully');
+                                            // currentStudentListItem1.find('.studentname-text').text(response.facultyinfo['name']);
+                                            // currentStudentListItem1.find('.mobile-text').text(response.facultyinfo['mobile']);
+                                            // currentStudentListItem1.find('.role-text').text(properCase(roles[response.facultyinfo['role_id']]));
+                                            
+                                            // currentStudentListItem1.data('receipt-details',response.facultyinfo);
+                                            
+                                            // if(response.facultyinfo.facultystatus=="Active"){
+                                            //     currentStudentListItem1.css('background-color', '#17ff4947');
+                                            // }else{
+                                            //     currentStudentListItem1.css('background-color', '#ff6161');
+                                            // }
+
                                             $.alert(response.msg);
                                             jc.close();
                                         } else {
@@ -918,17 +896,14 @@
                             btnClass: serverinfo.updatepermission == 1 ? 'btn-blue' : 'btn-blue hide',
                             action: function () {
                                 var formData = {
-                                    studentreid: $('#student_re_id').val(),
-                                    studentid: $('#studentid').val(),
+                                    staff_f_id: $('#staff_f_id').val(),
+                                    facultyaccountid: $('#facultyaccountid').val(),
+                                    role_id: $('#faculty_role_id').val(),
                                     name: $('#name').val(),
                                     dob: $('#dob').val(),
-                                    fathername: $('#fathername').val(),
-                                    mothername: $('#mothername').val(),
                                     contactno: $('#contactno').val(),
                                     address: $('#address1').val(),
-                                    class: $('#class-profile').val(),
-                                    section: $('#section-profile').val(),
-                                    status: $('#status').val()
+                                    status: $('#status').val(),
                                 };
                                 // console.log(formData);
                                 // Add your update logic here
@@ -941,20 +916,21 @@
                                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                                     },
                                     success: function(response) {
-                                        // console.log(response.studentinfo);
+                                        // console.log(response);
                                         if (response.success) {
-                                            currentStudentListItem1.find('.studentname-text').text(response.studentinfo['name']);
-                                            currentStudentListItem1.find('.class-section-text').text(response.studentinfo['class']+" - "+response.studentinfo['section']);
-                                            currentStudentListItem1.find('.fathername-text').text(response.studentinfo['fathername']);
-                                            // $.alert('Student profile updated successfully');
-                                            currentStudentListItem1.data('receipt-details',urlEncode(JSON.stringify(response.studentinfo)));
+                                            currentStudentListItem1.find('.studentname-text').text(response.facultyinfo['name']);
+                                            currentStudentListItem1.find('.mobile-text').text(response.facultyinfo['mobile']);
+                                            currentStudentListItem1.find('.role-text').text(properCase(roles[response.facultyinfo['role_id']]));
                                             
-                                            if(response.studentinfo.status=="Active"){
+                                            currentStudentListItem1.data('receipt-details',response.facultyinfo);
+                                            
+                                            if(response.facultyinfo.facultystatus=="Active"){
                                                 currentStudentListItem1.css('background-color', '#17ff4947');
                                             }else{
                                                 currentStudentListItem1.css('background-color', '#ff6161');
                                             }
-                                            
+
+                                            $.alert(response.msg);
                                             jc.close();
                                         } else {
                                             $.alert('Failed to update student profile');
@@ -972,38 +948,17 @@
                         }
                     }
                 });
-
-                // Attach the change event handler after the modal content is loaded
-                $(document).on('change', '#class-profile', function() {
-                    var selectedClass = $(this).val();
-                    console.log('Selected Class:', selectedClass);
-                    var selectedClassObject = schoolClasses.find(schoolClass => schoolClass.class === selectedClass);
-                    if (selectedClassObject) {
-                        var selectedSections = selectedClassObject.section;
-                        console.log('Selected Sections:', selectedSections);
-                        var newSectionOptions = selectedSections.map(section => `
-                            <option value="${section}">
-                                ${section}
-                            </option>
-                        `).join('');
-                        $('#section-profile').html(newSectionOptions);
-                        $('#section-profile').val(currentStudentDetails1.section); // Set the selected section
-                    } else {
-                        $('#section-profile').html(''); // Clear sections if no class is found
-                    }
-                });
-
-                // Trigger the change event to set the initial section options
-                $('#class-profile').trigger('change');
+                
             }
         });
         // view profile end
+
         
-        $("#addStudentForm").on("submit", function (e) {
+        $("#addStaffForm").on("submit", function (e) {
 			e.preventDefault(); // Prevent the form from submitting normally
 			$.ajax({
 				type: 'POST',
-				url: window.location.origin+"/"+mainParameterAddStudent,
+				url: window.location.origin+"/"+mainParameterAddStaff,
 				data: $(this).serialize(),
 				dataType: 'json',
 				beforeSend: function (xhr) {
@@ -1014,11 +969,10 @@
 				},
 				success: function(response) {
                     if (response.success==1) {
-                        $('#addStudentForm')[0].reset();
+                        $('#addStaffForm')[0].reset();
                         
-                        list = addStudentListItem(response.studentinfo);
+                        list = addStaffListItem(response.facultyinfo);
                         $('#student-list').append(list);
-
                         $.alert(response.msg);
                     } else {
                         $.alert(response.msg);
@@ -1026,36 +980,6 @@
                 }
             });
         });
-
-        function addStudentListItem(ph){
-            const backgroundStyle = ph['photo'] ? `background-image: url('${ph['photo']}');` : '';
-            listItem = `<li class="special-list success-list" data-receipt-details="${urlEncode(JSON.stringify(ph))}">
-                        <div class="circle-badge openEditorFromPhotoButton" style="${backgroundStyle}"></div>
-                        <div class="flex-row view-profile">
-                            <div class="justify-between">
-                                <div style="width: 40%;">${ph['studentid']}</div>
-                                <div style="width: 60%;" class="studentname-text">${properCase(ph['name'])}</div>
-                            </div>
-                            <div class="text-muted justify-between f-s-15">
-                                <div style="width: 40%;" class="class-section-text">${ph['class']} - ${ph['section']}</div>
-                                <div style="width: 60%;" class="fathername-text">${ph['fathername']}</div>
-                            </div>
-                        </div>
-                        <div>
-                            <button class="openEditorFromFileButton" title="Upload Image"><i class="fa fa-upload" style="font-size: 20px;"></i></button>
-                        </div>
-                    </li>`;
-            return listItem;
-        }
-
-        function urlEncode(unencoded) {
-            return encodeURIComponent(unencoded).replace(/'/g,"%27").replace(/"/g,"%22");	
-        }
-
-        function urlDecode(encoded) {
-            return decodeURIComponent(encoded.replace(/\+/g,  " "));
-        }
-        
         function getIndianCurrency(number) {
             var decimal = Math.round((number - (no = Math.floor(number))) * 100);
             var hundred = '';
@@ -1249,14 +1173,14 @@
             // Trigger file upload
             $(document).on('click', '.openEditorFromFileButton', function (event) {
                 currentStudentListItem = $(this).closest('li');
-                currentStudentDetails = JSON.parse(urlDecode($(this).closest('li').data('receipt-details')));
+                currentStudentDetails = $(this).closest('li').data('receipt-details');
                 // $(this).closest('li').
                 // console.log('Student details:', currentStudentDetails);
                 $('#fileInput').click();
             });
             $(document).on('click', '.openEditorFromPhotoButton', function (event) {
                 currentStudentListItem = $(this).closest('li');
-                currentStudentDetails = JSON.parse(urlDecode($(this).closest('li').data('receipt-details')));
+                currentStudentDetails = $(this).closest('li').data('receipt-details');
                 // console.log('Student details:', currentStudentDetails);
                 $('#openCameraButton').click();
             });
@@ -1664,9 +1588,9 @@
             // Convert image data URL to JPEG Blob and handle the promise
             dataURLtoJpegBlob(imageDataURL).then((jpegBlob) => {
                 const formData = new FormData();
-                formData.append('profilephoto', jpegBlob, '_'+currentStudentDetails.studentid+'_student_photo.jpg');
+                formData.append('attachment', jpegBlob, '_'+currentStudentDetails.accountid+'_staff_photo.jpg');
                 formData.append('activitytype', 'updatephoto');
-                formData.append('studentid', currentStudentDetails.studentid);
+                formData.append('facultyaccountid', currentStudentDetails.accountid);
 
                 $.ajax({
                     url: window.location.origin + "/" + mainParameterPhoto, // Change this URL to your server endpoint
@@ -1717,28 +1641,6 @@
                 img.onerror = function() {
                     reject(new Error('Image loading failed'));
                 };
-            });
-        }
-
-        function addCartAjaxSubmit(ajaxdata,url){
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: ajaxdata,
-                dataType: 'json',
-                beforeSend: function() {
-                    // $(".jconfirm-content-pane").LoadingOverlay("show");
-                },
-                complete: function(data) {
-                    // $(".jconfirm-content-pane").LoadingOverlay("hide");
-                },
-                success: function(response) {
-                    if(response.success==1){
-                        $.alert({type: 'green',title:'Cart Information',content:response.msg});
-                    }else{
-                        $.alert({type: 'red',title:'Cart Information',content:response.msg});
-                    }
-                },
             });
         }
 

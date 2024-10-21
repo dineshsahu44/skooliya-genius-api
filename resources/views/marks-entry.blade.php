@@ -196,6 +196,35 @@
             background-color: #f1f1f1;
             z-index: 2;
         }
+
+        .toggle-button {
+            width: 45px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            background-color: #000000; /* Default color */
+            /* background-color: #3cbb54; */
+            color: white;
+            cursor: pointer;
+            /* border-radius: 5px; */
+            user-select: none; /* Prevent text selection */
+            transition: background-color 0.3s ease; /* Smooth color transition */
+        }
+
+        .toggle-button.absent {
+            background-color: #d44638; /* A - Attendance */
+        }
+
+        .toggle-button.leave {
+            background-color: #4286f5; /* L - blue */
+        }
+
+        .toggle-button.present {
+            background-color: #3cbb54; /* P - Present */
+        }
+
     </style>
     <link rel="stylesheet" type="text/css"
         href="https://adminlte.io/themes/AdminLTE/bower_components/bootstrap/dist/css/bootstrap.min.css">
@@ -225,6 +254,7 @@
 <!-- filter css and js -->
 <link rel="stylesheet" type="text/css" href="https://web.skooliya.com/Excel-like-Bootstrap-Table-Sorting-Filtering-Plugin/src/excel-bootstrap-table-filter-style.css"/>
 <script type="text/javascript" src="https://web.skooliya.com/Excel-like-Bootstrap-Table-Sorting-Filtering-Plugin/dist/excel-bootstrap-table-filter-bundle.js"></script>
+
 <script>
     function setSection(classid,sectionid,allclasswithsection){
         var allclasswithsection = JSON.parse(allclasswithsection);
@@ -250,12 +280,50 @@
         //     $(sectionid).append(new Option('All', 'All')).change();
         // }
     }
+
+    function toggleAttendance(button) {
+        var currentValue = button.innerHTML;
+
+        if (currentValue === 'N') {
+            // Change to A - Absent
+            button.innerHTML = 'P';
+            // button.classList.remove('leave','present');
+            button.classList.add('present');
+        }else if (currentValue === 'P') {
+            // Change to A - Absent
+            button.innerHTML = 'A';
+            button.classList.remove('leave','present');
+            button.classList.add('absent');
+        } else if (currentValue === 'A') {
+            // Change to L - Leave
+            button.innerHTML = 'L';
+            button.classList.remove('absent');
+            button.classList.add('leave');
+        } else if (currentValue === 'L') {
+            // Reset to default (P - Present)
+            button.innerHTML = 'P';
+            button.classList.remove('leave', 'absent');
+            button.classList.add('present');
+            //button.style.backgroundColor = 'green'; // Default state - Present
+        }
+    }
+
+
 </script>
 </head>
 
 <body class="skin-red sidebar-mini fixed">
     <section class="content">
+
         <form action="#" method="post" id="markEntryForm">
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col-xs-12">
+                    <select id="subjecttype" name="subjecttype" class="form-control changesubject" required>
+                        <option value="Scholastic-Subject">Scholastic Subject</option>
+                        <option value="Co-Scholastic-Subject">Co-Scholastic Subject</option>
+                    </select>
+                </div>
+            </div>
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-6">
                     <select id="class" name="class" class="form-control"  onchange="setSection('class','section','{{json_encode($assigned_class['permittedclass'])}}')" required>
@@ -267,7 +335,7 @@
                     </select>
                 </div>
                 <div class="col-xs-6">
-                    <select id="section" name="section" class="form-control" required>
+                    <select id="section" name="section" class="form-control changesubject" required>
                         <option value="" selected disabled>Select Section</option>
                     </select>
                 </div>
@@ -356,40 +424,70 @@
 	    var parsedTermAssessment = JSON.parse(termAssessmentjson);
         var mapedSubject = '<?php echo json_encode($mapedSubject); ?>';
 	    var parsedmapedSubject = JSON.parse(mapedSubject);
+        
+        var mapedCoSubject = '<?php echo json_encode($mapedCoSubject); ?>';
+	    var parsedmapedCoSubject = JSON.parse(mapedCoSubject);
+        
         var pass_marks = '';
         var max_marks = '';
         // termAssessment = JSON.parse(termAssessment);
-        $(document).on('change','#section',function () {
-            var selected_section = $(this).val();
+        $(document).on('change','.changesubject',function () {
+            var selected_section = $('#section').val();
             var selected_class = $('#class').val();
             // $("#subjectmarks").children('option').remove();
             $("#subject").html('').append(new Option("Select Subject", "")).change();
             $('#term').html('').append(new Option("Select Term", "")).change();
+            
+            $('#TotalStudent_Text').text('0');
+            $('#TotalCompleted_Text').text('0');
+            $('#TotalUncompleted_Text').text('0');
+            $('#AbsentCount_Text').text('0');
+            $('#marksEnteryClassWiseThead').html("");
+            $('#marksEnteryClassWiseTableBody').html("");
+            $('#savemarks').hide();
+
             assesment_value = [];
             if(selected_class==''||selected_section==''){
                 return;
             }
 
             map_subject_value = selected_section?parsedmapedSubject[selected_section]:undefined;
+            map_co_subject_value = selected_section?parsedmapedCoSubject[selected_section]:undefined;
+            
             map_termAssessment = selected_section?parsedTermAssessment[selected_section]:undefined;
-            if(map_subject_value){
+            var subjectType = $('#subjecttype').val();
+            subject_value = (subjectType=="Scholastic-Subject"?map_subject_value:((subjectType=="Co-Scholastic-Subject")?map_co_subject_value:undefined));
+            if(subject_value){
                 // Select your target select element
                 var selectElement = $('#subject');
                 selectElement.html('');
                 // Add an initial option
                 selectElement.append('<option value="">Select Subject</option>');
+                
+                if(subjectType=="Scholastic-Subject"){
+                    // Loop through the data and create optgroup and options
+                    subject_value.GroupDetails.forEach(function (group) {
+                        var optgroup = $('<optgroup>').attr('label', group.SubjectGroup.GroupName);
 
-                // Loop through the data and create optgroup and options
-                map_subject_value.GroupDetails.forEach(function (group) {
-                    var optgroup = $('<optgroup>').attr('label', group.SubjectGroup.GroupName);
+                        group.Subjects.forEach(function (subject) {
+                            var option = $('<option>').attr('value', subject.SubjectID).text(subject.SubjectName);
+                            optgroup.append(option);
+                        });
 
-                    group.Subjects.forEach(function (subject) {
-                        var option = $('<option>').attr('value', subject.SubjectID).text(subject.SubjectName);
-                        optgroup.append(option);
+                        selectElement.append(optgroup);
                     });
+                }else if(subjectType=="Co-Scholastic-Subject"){
+                    subject_value.AreaDetails.forEach(function (group) {
+                        var optgroup = $('<optgroup>').attr('label', group.Area.AreaName);
 
-                    selectElement.append(optgroup);
-                });
+                        group.Activity.forEach(function (subject) {
+                            var option = $('<option>').attr('value', subject['Area-Activity-ID']).text(subject.ActivityName);
+                            optgroup.append(option);
+                        });
+
+                        selectElement.append(optgroup);
+                    });
+                }
             }
 
             if(map_termAssessment){
@@ -444,9 +542,8 @@
                 const id = $(this).find(".obt-marks").attr("data-id");
                 const appid = $(this).find(".obt-marks").attr("data-appid");
                 const obtMarks = $(this).find(".obt-marks").text().trim();
-                const remarks = $(this).find(".remarks").text().trim();
-                const isAbsent = $(this).find(".is-attendance").prop("checked") ? "Yes" : "No";
-
+                const remarks = $(this).find(".remarks").val().trim();
+                const isAbsent = $(this).find(".is-attendance").text().trim();
                 // Create an object with the extracted data
                 const dataObject = {
                     "id": id,
@@ -493,8 +590,13 @@
         });
         
         function drawStudentmarksTable(data){
-            pass_marks = (typeof data.data.classSetting.MinMarks === 'undefined')?'':data.data.classSetting.MinMarks;
-            max_marks = (typeof data.data.classSetting.MaxMarks === 'undefined')?'':data.data.classSetting.MaxMarks;
+           pass_marks = "";
+           max_marks = "";
+            // console.log(data.data);
+            if(typeof data.data.classSetting!= 'undefined'&&data.data.classSetting!=null){
+                pass_marks = (typeof data.data.classSetting.MinMarks === 'undefined')?'':data.data.classSetting.MinMarks;
+                max_marks = (typeof data.data.classSetting.MaxMarks === 'undefined')?'':data.data.classSetting.MaxMarks;
+            }
             // <td data-b-a-s="thin" data-t="n">`+data.data.classSetting.MaxMarks+`</td>
             // <td data-b-a-s="thin" data-t="n">`+data.data.classSetting.MinMarks+`</td>
             //  <th class="header apply-filter" width="5%" data-f-bold="true" data-b-a-s="thin">#</th>
@@ -524,31 +626,43 @@
                     </tr>
                 `;
                 var tablebody = '';
-                var classSettingLength =Object.keys(data.data.classSetting).length;
+                var classSettingLength = ((typeof data.data.classSetting!= 'undefined'&&data.data.classSetting!=null)?Object.keys(data.data.classSetting).length:0);
+
                 if(classSettingLength>0){
                     $.each(data.data.studentRecord, function(key, value ) {
+                        const attendance = value.IsAbsent;  // This would be your input value for attendance
+                        const validStatuses = ["P", "L", "A"];  // Valid attendance values
+                        // If `attendance` is not found in the array, default to "P" (Present)
+                        const displayAttendance = validStatuses.includes(attendance) ? attendance : "P";
+
                         tablebody = tablebody+`<tr>
-                            <td data-b-a-s="thin" data-t="n">`+(value.roll_no==null?'':value.roll_no)+`</td>
-                            
-                            <td data-b-a-s="thin">`+value.name+`</td>
+                            <td data-b-a-s="thin" data-t="n" style="position: relative;">
+                                `+(value.roll_no==null?'':value.roll_no)+`
+                                <a href="javascript:void(0)" data-toggle="collapse" data-target="#collapse-`+value.id+`" aria-expanded="false" aria-controls="collapse-`+value.id+`" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                                    <i class="fa fa-plus"></i>
+                                </a>
+                            </td>
+                            <td data-b-a-s="thin">
+                                <div>`+value.name+`</div>
+                                <div id="collapse-`+value.id+`" class="collapse">
+                                    <strong>`+value.fathername+`</strong>
+                                    <strong>${value.registration_id}/${value.scholar_id}</strong>
+                                    <div class="toggle-button is-attendance ${!displayAttendance || displayAttendance === 'P' ? 'present' : (displayAttendance === 'A' ? 'absent' : 'leave')}" onclick="toggleAttendance(this)">${!displayAttendance ? 'P' : displayAttendance}</div>
+                                    <input type="text" class="form-control remarks" value="`+value['Remarks']+`" placeholder="Remarks">
+                                </div>
+                            </td>
                             <td data-b-a-s="thin" data-t="n" class="editable-cell float obt-marks" inputmode="numeric" contenteditable="true" data-id="`+value.id+`" data-appid="`+value.registration_id+`">
                             `+value['ObtMarks']+`
-                            </td>
-                            <td data-b-a-s="thin" class="editable-cell cap remarks" contenteditable="true" style="display: none;">             
-                            `+value['Remarks']+`
-                            </td>
-                            <td class="att-toggle-btn" data-b-a-s="thin" style="display: none;">
-                                <input type="checkbox" class="attendance-toggle is-attendance" data-toggle="toggle" data-on="Yes" data-off="No" data-onstyle="success" data-offstyle="danger" data-size="mini" `+(value.IsAbsent=='Yes'?'checked':'')+`>
                             </td>
                         </tr>`;
 
                         TotalStudent++;
-                        
-                        if(value['ObtMarks']!=''){
+                        // console.log(value['ObtMarks']!=''||(displayAttendance=='A'||displayAttendance=='L'));
+                        if(value['ObtMarks']!=''||(displayAttendance=='A'||displayAttendance=='L')){
                             TotalCompleted++;
                         }
 
-                        if(value.IsAbsent=='Yes'){
+                        if(displayAttendance=='A'||displayAttendance=='L'){
                             AbsentCount++;
                         }
                     });

@@ -63,6 +63,22 @@ use Illuminate\Support\Str;
         return SchoolSession::where('id',$sessionId)->first();
     }
 
+    function getUserByUsername($username){
+        return User::where('username',$username)->first();
+    }
+
+    function getcurrentSchoolAndSession($school_id=null){
+        $school_id = $school_id==null?getAuth()->school_id:$school_id;
+        return School::select('school_sessions.id as sessionid','school_sessions.name','school_sessions.start_date',
+            'school_sessions.end_date','schools.*'
+        )
+        ->join('school_sessions', function ($join) {
+            $join->on('schools.id', 'school_sessions.school_id')
+            ->where('school_sessions.status', 'Active');
+        })
+        ->where([['schools.id',$school_id]])->first();
+    }
+
     function saveFiles($file,$accpectFiles){
         $current_timestamp = Carbon::now()->timestamp;
         $fileName = $current_timestamp.'_'.cleanSpecial($file->getClientOriginalName());
@@ -99,7 +115,7 @@ use Illuminate\Support\Str;
     function getHostInfoAndDatabase(){
         return [
             'local'=>[
-                'host'=>'217.21.80.2',
+                'host'=>'65.0.244.10',
                 'database'  => 'u210117126_3050884_test',
                 'username'  => 'u210117126_skooliya',
                 'password'  => 'Skooliya@123',
@@ -176,14 +192,14 @@ use Illuminate\Support\Str;
                 "extension-type"=>[
                     'png','jpeg','jpg'
                 ],
-                "path"=>"app/profile",
+                "path"=>"app/staff/profile",
                 "max-size"=>500//kb
             ],
             "student-photo-files"=>[
                 "extension-type"=>[
                     'png','jpeg','jpg'
                 ],
-                "path"=>"app/profile",
+                "path"=>"app/student/profile",
                 "max-size"=>500//kb
             ],
             "comment-files"=>[
@@ -844,7 +860,8 @@ use Illuminate\Support\Str;
                     "accounttype"=> "admin",
                     "activityname"=>  "Update Photo",
                     "viewType"=> 1, // 1-Custom Tab chrome, 0-webview
-                ],
+                ]
+
             ],
             "admin"=>[
                 [
@@ -904,9 +921,49 @@ use Illuminate\Support\Str;
                     "activityname"=>  "Update Photo",
                     "viewType"=> 1, // 1-Custom Tab chrome, 0-webview
                 ],
+                [
+                    "optionname"=> "Satff Photo",
+                    "iconurl"=> "https://api.skooliya.com/images/Marks-Entry.png",
+                    "color"=> "#f89b00",
+                    "redirecturl"=> "https://api.skooliya.com/api/staff-photo-list?apptype=faculty",
+                    "accounttype"=> "admin",
+                    "activityname"=>  "Satff Photo",
+                    "viewType"=> 1, // 1-Custom Tab chrome, 0-webview
+                ],
+
             ]
         ];
         return @$mainscreen[$accounttype];
+    }
+
+    function getMachinesInSchool($servername=null){
+        $servername = strtolower(trim($servername));
+        $machineDetails = [
+            "ccsrath"=>[
+                "ZYRL07096746",
+                "ZYRL07096757",
+                "ZYRL07096759"
+            ],
+            "ndpshamirpur"=>["ZYRK22090931"],
+            "starcity"=>["ZYRL07096755","AYSC26027697"],
+        ];
+        return !empty($servername)&&$servername!=null?$machineDetails[$servername]:[];
+    }
+
+    function orderFor($getprint=null){
+        $orderFor = array(
+            "StudentIDCard"=>[
+                "OrderFor"=>"StudentIDCard",
+                "OrderFromTable"=>"Registration",
+                "url"=>"",
+            ],
+            "StaffIDCard"=>[
+                "OrderFor"=>"StaffIDCard",
+                "OrderFromTable"=>"Faculty",
+                "url"=>"",
+            ],
+        );
+        return ((!empty($getprint))?$orderFor[$getprint]:$orderFor);
     }
 
     
@@ -943,6 +1000,8 @@ use Illuminate\Support\Str;
         return ($Rupees ? $Rupees . 'Rupees ' : '') . $paise;
     }
 
+
+
     function selectedSessionClasses($school_id){
         $classes = Classes::where('school_id', $school_id)->pluck('class', 'id')->toArray();
         return $classes;
@@ -976,26 +1035,23 @@ use Illuminate\Support\Str;
 
     function getMapedSubject($session_id){
         $query = "SELECT 
-                CONCAT('{\"',
-                    subg.sec_id,'\":',
-                    CONCAT(
-                        '{\"ClassSection\":', JSON_OBJECT('Class', JSON_OBJECT('Name', subg.class, 'ID', subg.class_id), 'Section', JSON_OBJECT('Name', subg.section, 'ID', subg.sec_id)),
-                        ',\"GroupDetails\":[', GROUP_CONCAT(subg.result), ']}'
-                    ),
-                    '}'
+                JSON_OBJECT(
+                    subg.sec_id,
+                            JSON_OBJECT(
+                                'ClassSection', JSON_OBJECT(
+                                    'Class', JSON_OBJECT('Name', subg.class, 'ID', subg.class_id),
+                                    'Section', JSON_OBJECT('Name', subg.section, 'ID', subg.sec_id)
+                                ),
+                                'GroupDetails', JSON_ARRAYAGG(subg.result)
+                    )
                 ) AS finalResult
             FROM 
                 (
                     SELECT 
-                        CONCAT('{',
-                    '\"SubjectGroup\":', JSON_OBJECT('GroupName', sg.subject_group, 'GroupID', sg.id),
-                    ',\"Subjects\":[', GROUP_CONCAT( 
-                        CONCAT(
-                            '{','\"SubjectID\":', s.id,',', '\"SubjectName\":\"', s.subject_name,'\"'),
-                        '}'
-                        )
-                    ,']}'
-                ) AS result,
+                        JSON_OBJECT(
+                            'SubjectGroup', JSON_OBJECT('GroupName', sg.subject_group, 'GroupID', sg.id, 'SubjectGroupPosition',sg.position_by),
+                            'Subjects', JSON_ARRAYAGG(JSON_OBJECT('SubjectID', s.id, 'SubjectName', s.subject_name, 'SubjectPosition',s.position_by))
+                        ) AS result,
                         sg.id AS sgid, sg.subject_group,
                         c.id AS class_id, c.class,
                         sec.id AS sec_id, sec.section 
@@ -1014,13 +1070,86 @@ use Illuminate\Support\Str;
                 subg.sec_id
         ";
         $result = DB::select($query);
-        $subject = [];
-        foreach($result as $r){
-            foreach(json_decode($r->finalResult,true) as $k=>$s){
-                $subject[$k]=$s;
-            }   
+        
+        $subject_group = [];
+        foreach ($result as $r) {
+            $main = json_decode($r->finalResult, true);
+            foreach ($main as $sec_id => $section) {
+                foreach ($section['GroupDetails'] as &$groupDetail) {
+                    // Sort the Subjects array within each 'GroupDetails' array by SubjectID
+                    usort($groupDetail['Subjects'], function($a, $b) {
+                        return $a['SubjectPosition'] - $b['SubjectPosition']; // Sort Subjects by ID
+                    });
+                }
+        
+                // Sort the 'GroupDetails' array by GroupID
+                usort($section['GroupDetails'], function($a, $b) {
+                    return $a['SubjectGroup']['SubjectGroupPosition'] - $b['SubjectGroup']['SubjectGroupPosition']; // Sort GroupDetails by GroupID
+                });
+        
+                $subject_group[$sec_id] = $section;
+            }
         }
-        return $subject;
+        return $subject_group;
+    }
+
+    function getMapedCoScholasticSubject($session_id){
+        // $this->loadmodel('ExamActivityPlan');
+		$ActivityResult = array();
+		$query = "SELECT 
+                    JSON_OBJECT(
+                        subg.sec_id,
+                                JSON_OBJECT(
+                                    'ClassSection', JSON_OBJECT(
+                                        'Class', JSON_OBJECT('Name', subg.class, 'ID', subg.class_id),
+                                        'Section', JSON_OBJECT('Name', subg.section, 'ID', subg.sec_id)
+                                    ),
+                                    'AreaDetails', JSON_ARRAYAGG(subg.result)
+                        )
+                    ) AS finalResult
+				FROM 
+					(
+                        SELECT 
+                            JSON_OBJECT(
+                                'Area', JSON_OBJECT('AreaName', a.area_name, 'AreaID', a.id,'AreaGroupPosition',a.position_by),
+                                'Activity', JSON_ARRAYAGG(JSON_OBJECT('ActivityID', act.id, 'ActivityName', act.activity_name,'ActivityPosition',act.position_by, 'Area-Activity-ID',concat(a.id,'-',act.id)))
+                            ) AS result,
+                            a.id AS areaid, a.area_name,
+							c.id AS class_id, c.class,
+							sec.id AS sec_id, sec.section 
+						FROM `exam_activity_plans` ap 
+						INNER JOIN `exam_co_scholastic_activities` act ON act.id = ap.ActivityID 
+						INNER JOIN `exam_co_scholastic_areas` a ON a.id = ap.AreaID 
+						INNER JOIN classes c ON c.id = ap.ClassID
+						INNER JOIN sections sec ON sec.id = ap.SectionID
+						WHERE SessionID = ".$session_id." 
+						-- and SectionID = 47 
+						GROUP BY sec.id, ap.AreaID
+					) AS subg 
+				GROUP BY subg.sec_id";
+
+        $result = DB::select($query);
+        
+        $subject_group = [];
+        foreach ($result as $r) {
+            $main = json_decode($r->finalResult, true);
+            foreach ($main as $sec_id => $section) {
+                foreach ($section['AreaDetails'] as &$groupDetail) {
+                    // Sort the Subjects array within each 'AreaDetails' array by SubjectID
+                    usort($groupDetail['Activity'], function($a, $b) {
+                        return $a['ActivityPosition'] - $b['ActivityPosition']; // Sort Activity by ID
+                    });
+                }
+        
+                // Sort the 'AreaDetails' array by GroupID
+                usort($section['AreaDetails'], function($a, $b) {
+                    return $a['Area']['AreaGroupPosition'] - $b['Area']['AreaGroupPosition']; // Sort AreaDetails by GroupID
+                });
+        
+                $subject_group[$sec_id] = $section;
+            }
+        }
+		return $subject_group;
     }
 
     function generateShortenedRepresentation($inputString, $maxLength = 6)
